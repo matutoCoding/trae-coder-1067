@@ -7,7 +7,7 @@
   margin-bottom: $spacing-lg;
 
   .slotItem {
-    width: calc((100% - 48rpx) / 4;
+    width: calc((100% - 48rpx) / 4);
     min-width: 150rpx;
     height: 88rpx;
     border-radius: $radius-md;
@@ -95,7 +95,7 @@
 }
 
 .bookingSummary {
-  background: linear-gradient(135deg, rgba($color-primary, 0.1), rgba($color-primary-light, 0.1);
+  background: linear-gradient(135deg, rgba($color-primary, 0.1), rgba($color-primary-light, 0.1));
   border-radius: $radius-lg;
   padding: $spacing-lg;
   margin-bottom: $spacing-lg;

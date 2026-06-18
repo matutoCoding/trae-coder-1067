@@ -137,15 +137,8 @@ const SchedulePage: React.FC = () => {
       setBookingForm({ photographerName: '', photographerId: '', filmType: '', notes: '' })
       clearSlotSelection()
 
-      generateBill(
-        booking.id,
-        booking.photographerId,
-        booking.photographerName,
-        booking.stationId,
-        selectedStation?.name || '',
-        booking.date,
-        booking.duration
-      )
+      const stationName = selectedStation?.name || stations.find(s => s.id === booking.stationId)?.name || ''
+      generateBill(booking, stationName)
     } else {
       Taro.showToast({ title: '预订失败，请重试', icon: 'none' })
     }
@@ -202,15 +195,8 @@ const SchedulePage: React.FC = () => {
   }
 
   const handleGenerateBill = (booking: Booking) => {
-    const bill = generateBill(
-      booking.id,
-      booking.photographerId,
-      booking.photographerName,
-      booking.stationId,
-      stations.find(s => s.id === booking.stationId)?.name || '',
-      booking.date,
-      booking.duration
-    )
+    const stationName = stations.find(s => s.id === booking.stationId)?.name || ''
+    const bill = generateBill(booking, stationName)
     if (bill) {
       Taro.navigateTo({
         url: `/pages/bill-detail/index?id=${bill.id}`

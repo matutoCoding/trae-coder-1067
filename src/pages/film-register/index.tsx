@@ -10,16 +10,13 @@ import { formatCurrency } from '@/utils/pricing'
 
 const FilmRegisterPage: React.FC = () => {
   const router = useRouter()
-  const { addFilmRecord, currentBill, bills, setCurrentBill } = useBillsStore()
+  const { addFilmRecord, currentBill, bills, setCurrentBill, removeFilmRecord } = useBillsStore()
 
   const billId = router.params.billId
 
   const bill = useMemo(() => {
-    if (currentBill && currentBill.id === billId) {
-      return currentBill
-    }
-    return bills.find(b => b.id === billId)
-  }, [currentBill, bills, billId])
+    return bills.find(b => b.id === billId) || currentBill
+  }, [bills, currentBill, billId])
 
   const [filmType, setFilmType] = useState<string>(filmTypes[0].value)
   const [format, setFormat] = useState<string>('135')
@@ -76,8 +73,23 @@ const FilmRegisterPage: React.FC = () => {
     }
   }
 
-  const handleDeleteFilm = (filmId: string) => {
-    Taro.showToast({ title: '删除功能开发中', icon: 'none' })
+  const handleDeleteFilm = async (filmId: string) => {
+    if (!bill) return
+
+    const result = await Taro.showModal({
+      title: '删除记录',
+      content: '确定要删除这条胶片记录吗？',
+      confirmText: '删除',
+      confirmColor: '#FF4444',
+      cancelText: '取消'
+    })
+
+    if (result.confirm && bill) {
+      const success = removeFilmRecord(bill.id, filmId)
+      if (success) {
+        Taro.showToast({ title: '删除成功', icon: 'success' })
+      }
+    }
   }
 
   const handleBack = () => {

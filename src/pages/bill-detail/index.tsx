@@ -10,14 +10,14 @@ import { formatCurrency, formatDuration } from '@/utils/pricing'
 
 const BillDetailPage: React.FC = () => {
   const router = useRouter()
-  const { bills, updateBillStatus, setCurrentBill, addFilmRecord, generateBill } = useBillsStore()
+  const { bills, updateBillStatus, setCurrentBill, addFilmRecord, generateBill, currentBill } = useBillsStore()
   const { stations, bookings, getStationById } = useScheduleStore()
 
   const billId = router.params.id
 
   const bill = useMemo(() =>
-    bills.find(b => b.id === billId),
-    [bills, billId]
+    bills.find(b => b.id === billId) || (currentBill && currentBill.id === billId ? currentBill : null),
+    [bills, currentBill, billId]
   )
 
   const booking = useMemo(() =>
@@ -25,10 +25,30 @@ const BillDetailPage: React.FC = () => {
     [bill, bookings]
   )
 
-  const station = useMemo(() =>
-    booking ? getStationById(booking.stationId) : null,
-    [booking, getStationById]
-  )
+  const station = useMemo(() => {
+    if (!bill) return null
+    if (bill.stationId) {
+      const found = getStationById(bill.stationId)
+      if (found) return found
+    }
+    if (booking) {
+      return getStationById(booking.stationId)
+    }
+    if (bill.stationName) {
+      return {
+        id: bill.stationId || '',
+        name: bill.stationName,
+        type: 'black_white' as const,
+        description: '',
+        equipment: [],
+        capacity: 0,
+        status: 'available' as const,
+        hourlyRate: 0,
+        createdAt: ''
+      }
+    }
+    return null
+  }, [bill, booking, getStationById])
 
   const handlePay = async () => {
     if (!bill) return

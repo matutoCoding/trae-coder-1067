@@ -11,6 +11,7 @@ interface BillsState {
   setCurrentBill: (bill: Bill | null) => void
   generateBill: (
     booking: Booking,
+    stationName: string,
     filmRecords?: FilmRecord[],
     discountRate?: number
   ) => Bill | null
@@ -38,7 +39,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     set({ currentBill: bill })
   },
 
-  generateBill: (booking, filmRecords = [], discountRate = 0) => {
+  generateBill: (booking, stationName, filmRecords = [], discountRate = 0) => {
     const { calculate } = usePricingStore.getState()
 
     const pricingResult = calculate(booking.duration)
@@ -60,6 +61,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       photographerId: booking.photographerId,
       photographerName: booking.photographerName,
       stationId: booking.stationId,
+      stationName: stationName,
       date: booking.date,
       totalHours: booking.duration,
       tierBreakdown,
@@ -73,7 +75,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       createdAt: dayjs().toISOString()
     }
 
-    console.log('[BillsStore] 生成账单:', newBill.id, '金额:', total)
+    console.log('[BillsStore] 生成账单:', newBill.id, '工位:', stationName, '金额:', total)
 
     set((state) => ({
       bills: [...state.bills, newBill],
@@ -86,27 +88,40 @@ export const useBillsStore = create<BillsState>((set, get) => ({
   addFilmRecord: (billId, record) => {
     console.log('[BillsStore] 添加胶片记录:', record.id, '价格:', record.price)
 
-    set((state) => ({
-      bills: state.bills.map(bill => {
+    set((state) => {
+      const updatedBills = state.bills.map(bill => {
         if (bill.id !== billId) return bill
-        const updatedBill = {
+        const newFilmFee = bill.filmFee + record.price
+        const newDiscountAmount = Math.round((bill.stationFee + newFilmFee) * bill.discountRate * 100) / 100
+        const newTotal = bill.stationFee + newFilmFee - newDiscountAmount
+        return {
           ...bill,
           filmRecords: [...bill.filmRecords, record],
-          filmFee: bill.filmFee + record.price,
-          discountAmount: Math.round((bill.stationFee + bill.filmFee + record.price) * bill.discountRate * 100) / 100,
-          total: bill.stationFee + bill.filmFee + record.price - bill.discountAmount
+          filmFee: newFilmFee,
+          discountAmount: newDiscountAmount,
+          total: newTotal
         }
-        return updatedBill
-      }),
-      currentBill: state.currentBill?.id === billId
-        ? {
-            ...state.currentBill,
-            filmRecords: [...state.currentBill.filmRecords, record],
-            filmFee: state.currentBill.filmFee + record.price,
-            total: state.currentBill.stationFee + state.currentBill.filmFee + record.price - state.currentBill.discountAmount
-          }
-        : state.currentBill
-    }))
+      })
+
+      let updatedCurrentBill = state.currentBill
+      if (state.currentBill?.id === billId) {
+        const newFilmFee = state.currentBill.filmFee + record.price
+        const newDiscountAmount = Math.round((state.currentBill.stationFee + newFilmFee) * state.currentBill.discountRate * 100) / 100
+        const newTotal = state.currentBill.stationFee + newFilmFee - newDiscountAmount
+        updatedCurrentBill = {
+          ...state.currentBill,
+          filmRecords: [...state.currentBill.filmRecords, record],
+          filmFee: newFilmFee,
+          discountAmount: newDiscountAmount,
+          total: newTotal
+        }
+      }
+
+      return {
+        bills: updatedBills,
+        currentBill: updatedCurrentBill
+      }
+    })
 
     return true
   },
@@ -120,26 +135,40 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     console.log('[BillsStore] 删除胶片记录:', recordId)
 
-    set((state) => ({
-      bills: state.bills.map(b => {
+    set((state) => {
+      const updatedBills = state.bills.map(b => {
         if (b.id !== billId) return b
+        const newFilmFee = b.filmFee - record.price
+        const newDiscountAmount = Math.round((b.stationFee + newFilmFee) * b.discountRate * 100) / 100
+        const newTotal = b.stationFee + newFilmFee - newDiscountAmount
         return {
           ...b,
           filmRecords: b.filmRecords.filter(r => r.id !== recordId),
-          filmFee: b.filmFee - record.price,
-          discountAmount: Math.round((b.stationFee + b.filmFee - record.price) * b.discountRate * 100) / 100,
-          total: b.stationFee + b.filmFee - record.price - b.discountAmount
+          filmFee: newFilmFee,
+          discountAmount: newDiscountAmount,
+          total: newTotal
         }
-      }),
-      currentBill: state.currentBill?.id === billId
-        ? {
-            ...state.currentBill,
-            filmRecords: state.currentBill.filmRecords.filter(r => r.id !== recordId),
-            filmFee: state.currentBill.filmFee - record.price,
-            total: state.currentBill.stationFee + state.currentBill.filmFee - record.price - state.currentBill.discountAmount
-          }
-        : state.currentBill
-    }))
+      })
+
+      let updatedCurrentBill = state.currentBill
+      if (state.currentBill?.id === billId) {
+        const newFilmFee = state.currentBill.filmFee - record.price
+        const newDiscountAmount = Math.round((state.currentBill.stationFee + newFilmFee) * state.currentBill.discountRate * 100) / 100
+        const newTotal = state.currentBill.stationFee + newFilmFee - newDiscountAmount
+        updatedCurrentBill = {
+          ...state.currentBill,
+          filmRecords: state.currentBill.filmRecords.filter(r => r.id !== recordId),
+          filmFee: newFilmFee,
+          discountAmount: newDiscountAmount,
+          total: newTotal
+        }
+      }
+
+      return {
+        bills: updatedBills,
+        currentBill: updatedCurrentBill
+      }
+    })
 
     return true
   },
@@ -171,12 +200,12 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
   getBillsByPhotographer: (photographerId) => {
     return get().bills.filter(b => b.photographerId === photographerId)
-      .sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()
+      .sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf())
   },
 
   getBillsByStatus: (status) => {
     return get().bills.filter(b => b.status === status)
-      .sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()
+      .sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf())
   },
 
   getTotalRevenue: () => {

@@ -7,6 +7,7 @@ import { useScheduleStore } from '@/store/useScheduleStore'
 import { usePricingStore } from '@/store/usePricingStore'
 import type { Station, Booking } from '@/types'
 import { formatDuration } from '@/utils/pricing'
+import { getStationTypeLabel } from '@/data/mockStations'
 
 const StationDetailPage: React.FC = () => {
   const router = useRouter()
@@ -30,56 +31,69 @@ const StationDetailPage: React.FC = () => {
   const equipmentList = useMemo(() => {
     if (!station) return []
 
-    const equipment = []
+    const equipment: { name: string; specs: string[] }[] = []
 
-    if (station.type === 'film_processor') {
+    if (station.type === 'black_white') {
       equipment.push({
-        name: '胶片冲洗机',
-        specs: ['135/120兼容', '自动控温', '定时搅拌', 'C-41/黑白双模式']
+        name: '黑白放大机',
+        specs: ['135/120兼容', '最大放大8×10', '调焦精准', '对比度可调']
       })
       equipment.push({
         name: '暗房安全灯',
         specs: ['红光/黄光切换', '亮度可调', '定时开关']
       })
       equipment.push({
-        name: '量杯组',
-        specs: ['100ml', '500ml', '1000ml', '2000ml']
-      })
-    } else if (station.type === 'enlarger') {
-      equipment.push({
-        name: '放大机',
-        specs: ['135/120兼容', '最大放大8×10', '彩色/黑白', '调焦精准']
+        name: '胶片冲洗罐',
+        specs: ['135专用', '120专用', '双模式兼容']
       })
       equipment.push({
-        name: '放大镜头',
-        specs: ['50mm f/2.8', '80mm f/5.6', '105mm f/5.6']
+        name: '恒温水浴',
+        specs: ['±0.5°C精度', '20-40°C可调', '大容量设计']
+      })
+    } else if (station.type === 'color') {
+      equipment.push({
+        name: '彩色放大机',
+        specs: ['135/120兼容', '最大放大11×14', '彩色混合头', '滤镜内置']
       })
       equipment.push({
-        name: '曝光计时器',
-        specs: ['0.1s精度', '分段曝光', '试条模式']
-      })
-    } else if (station.type === 'wet_table') {
-      equipment.push({
-        name: '水洗工作台',
-        specs: ['3槽设计', '温度控制', '独立排水', '防腐蚀材质']
+        name: '色彩分析仪',
+        specs: ['自动测色', '密度读取', '三色通道调节']
       })
       equipment.push({
-        name: '冲洗盘组',
-        specs: ['8×10 6个', '11×14 4个', '16×20 2个']
-      })
-    } else if (station.type === 'scanner') {
-      equipment.push({
-        name: '专业扫描仪',
-        specs: ['135/120/4×5', '4800dpi', '16位色彩', 'ICE除尘']
+        name: 'C-41冲洗套药',
+        specs: ['显影液', '漂定液', '稳定液', '补充液']
       })
       equipment.push({
-        name: '色彩校准仪',
-        specs: ['ICC Profile', '定期校准', '专业色彩管理']
+        name: '恒温系统',
+        specs: ['±0.3°C精度', '自动控温', '过热保护']
       })
-    } else {
+    } else if (station.type === 'large_format') {
       equipment.push({
-        name: '综合工作台',
-        specs: ['暗房操作', '多用途设计', '专业照明']
+        name: '大画幅放大机',
+        specs: ['4×5/8×10兼容', '最大放大16×20', '冷光源', '微调焦']
+      })
+      equipment.push({
+        name: '大画幅冲洗盘',
+        specs: ['8×10 4个', '11×14 2个', '16×20 2个']
+      })
+      equipment.push({
+        name: '专业调焦放大镜',
+        specs: ['8×10英寸', '4倍放大', '带刻度']
+      })
+      equipment.push({
+        name: '大型水洗槽',
+        specs: ['可放16×20相纸', '循环流水', '独立排水']
+      })
+    }
+
+    if (station.equipment && station.equipment.length > 0) {
+      station.equipment.forEach(eq => {
+        if (!equipment.some(e => eq.includes(e.name))) {
+          equipment.push({
+            name: eq,
+            specs: ['标准配置', '维护良好']
+          })
+        }
       })
     }
 
@@ -130,7 +144,7 @@ const StationDetailPage: React.FC = () => {
     <ScrollView className={styles.pageContainer} scrollY>
       <View className={styles.stationHeader}>
         <Text className={styles.stationName}>{station.name}</Text>
-        <View className={styles.stationType}>{station.typeLabel}</View>
+        <View className={styles.stationType}>{getStationTypeLabel(station.type)}</View>
         <Text className={styles.stationDesc}>{station.description}</Text>
       </View>
 
