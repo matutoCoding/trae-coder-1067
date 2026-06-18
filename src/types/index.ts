@@ -71,7 +71,7 @@ export type MemberLevel = keyof typeof MEMBER_LEVELS
 export interface BillOperationLog {
   id: string
   billId: string
-  operation: 'create' | 'pay' | 'partial_refund' | 'full_refund' | 'cancel' | 'update'
+  operation: 'create' | 'pay' | 'partial_refund' | 'full_refund' | 'cancel' | 'recalculate' | 'film_add' | 'film_remove'
   operator: string
   amount: number
   changeAmount: number

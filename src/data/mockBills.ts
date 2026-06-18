@@ -336,7 +336,9 @@ export const getOperationLabel = (operation: BillOperationLog['operation']): str
     partial_refund: '部分退款',
     full_refund: '全额退款',
     cancel: '取消',
-    update: '修改'
+    recalculate: '重新计价',
+    film_add: '添加胶片',
+    film_remove: '删除胶片'
   }
   return map[operation]
 }

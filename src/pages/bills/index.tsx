@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView, Button, Input, Picker } from '@tarojs/components'
 import Taro, { useRouter, useDidShow } from '@tarojs/taro'
 import styles from './index.module.scss'
@@ -6,21 +6,27 @@ import classnames from 'classnames'
 import dayjs from 'dayjs'
 import BillCard from '@/components/BillCard'
 import { useBillsStore } from '@/store/useBillsStore'
-import { formatCurrency, formatDuration } from '@/utils/pricing'
+import { formatCurrency } from '@/utils/pricing'
 import type { Bill, BillStatus, MemberLevel } from '@/types'
 import { MEMBER_LEVELS } from '@/types'
+import { getBillStatusLabel } from '@/data/mockBills'
 
-type StatusFilter = 'all' | 'pending' | 'paid' | 'refunded' | 'cancelled'
+type StatusFilter = 'all' | BillStatus
+
+const STATUS_TABS: { key: StatusFilter; label: string }[] = [
+  { key: 'all', label: '全部' },
+  { key: 'unpaid', label: '待支付' },
+  { key: 'paid', label: '已支付' },
+  { key: 'refunded', label: '已退款' },
+  { key: 'cancelled', label: '已取消' }
+]
 
 const BillsPage: React.FC = () => {
   const router = useRouter()
-  const {
-    bills,
-    getBillsByFilter,
-    getMonthlyStats,
-    setCurrentBill,
-    payBill
-  } = useBillsStore()
+  const bills = useBillsStore(state => state.bills)
+  const getBillsByFilter = useBillsStore(state => state.getBillsByFilter)
+  const getMonthlyStats = useBillsStore(state => state.getMonthlyStats)
+  const payBill = useBillsStore(state => state.payBill)
 
   const [activeTab, setActiveTab] = useState<StatusFilter>('all')
   const [searchText, setSearchText] = useState('')
@@ -33,7 +39,9 @@ const BillsPage: React.FC = () => {
 
   useDidShow(() => {
     if (router.params) {
-      if (router.params.status) setActiveTab(router.params.status as StatusFilter)
+      if (router.params.status && ['unpaid', 'paid', 'refunded', 'cancelled'].includes(router.params.status)) {
+        setActiveTab(router.params.status as StatusFilter)
+      }
       if (router.params.stationId) setFilterStationId(router.params.stationId)
       if (router.params.photographerId) setFilterPhotographerId(router.params.photographerId)
       if (router.params.memberLevel) setFilterMemberLevel(router.params.memberLevel as MemberLevel)
@@ -44,18 +52,15 @@ const BillsPage: React.FC = () => {
 
   const summary = useMemo(() => {
     const stats = getMonthlyStats(dayjs().format('YYYY-MM'))
-    const pendingCount = bills.filter(b => b.status === 'pending').length
-    const pendingAmount = bills.filter(b => b.status === 'pending').reduce((sum, b) => sum + b.total, 0)
-    const paidCount = bills.filter(b => b.status === 'paid').length
-    const refundedCount = bills.filter(b => b.status === 'refunded' || b.status === 'cancelled').length
+    const unpaidBills = bills.filter(b => b.status === 'unpaid')
+    const paidBills = bills.filter(b => b.status === 'paid')
 
     return {
       totalRevenue: stats.totalRevenue,
-      pendingAmount,
-      pendingCount,
-      paidCount,
-      refundedCount,
-      totalCount: bills.length
+      unpaidAmount: unpaidBills.reduce((sum, b) => sum + b.total, 0),
+      unpaidCount: unpaidBills.length,
+      paidCount: paidBills.length,
+      refundedCount: bills.filter(b => b.status === 'refunded' || b.status === 'cancelled').length
     }
   }, [bills, getMonthlyStats])
 
@@ -84,37 +89,31 @@ const BillsPage: React.FC = () => {
 
   const tabCounts = useMemo(() => ({
     all: bills.length,
-    pending: bills.filter(b => b.status === 'pending').length,
+    unpaid: bills.filter(b => b.status === 'unpaid').length,
     paid: bills.filter(b => b.status === 'paid').length,
     refunded: bills.filter(b => b.status === 'refunded').length,
     cancelled: bills.filter(b => b.status === 'cancelled').length
   }), [bills])
 
-  const tabs: { key: StatusFilter; label: string }[] = [
-    { key: 'all', label: '全部' },
-    { key: 'pending', label: '待支付' },
-    { key: 'paid', label: '已支付' },
-    { key: 'refunded', label: '已退款' },
-    { key: 'cancelled', label: '已取消' }
-  ]
-
-  const handleBillDetail = (bill: Bill) => {
-    setCurrentBill(bill)
+  const handleCardClick = (bill: Bill) => {
     Taro.navigateTo({
       url: `/pages/bill-detail/index?id=${bill.id}`
     })
   }
 
-  const handleQuickPay = (bill: Bill) => {
+  const handleSettle = (bill: Bill) => {
     Taro.showModal({
       title: '确认收款',
       content: `确认收到 ${formatCurrency(bill.total)} 吗？`,
       confirmText: '确认收款',
+      confirmColor: '#6C5CE7',
       success: (res) => {
         if (res.confirm) {
           const success = payBill(bill.id)
           if (success) {
             Taro.showToast({ title: '收款成功', icon: 'success' })
+          } else {
+            Taro.showToast({ title: '收款失败', icon: 'none' })
           }
         }
       }
@@ -122,7 +121,6 @@ const BillsPage: React.FC = () => {
   }
 
   const handleAddFilm = (bill: Bill) => {
-    setCurrentBill(bill)
     Taro.navigateTo({
       url: `/pages/film-register/index?billId=${bill.id}`
     })
@@ -163,11 +161,11 @@ const BillsPage: React.FC = () => {
       <View className={styles.summaryCards}>
         <View className={styles.summaryCard}>
           <Text className={styles.summaryValue}>{formatCurrency(summary.totalRevenue)}</Text>
-          <Text className={styles.summaryLabel}>本月营收</Text>
+          <Text className={styles.summaryLabel}>实收营收</Text>
         </View>
         <View className={classnames(styles.summaryCard, styles.warning)}>
-          <Text className={styles.summaryValue}>{formatCurrency(summary.pendingAmount)}</Text>
-          <Text className={styles.summaryLabel}>待收 ({summary.pendingCount})</Text>
+          <Text className={styles.summaryValue}>{formatCurrency(summary.unpaidAmount)}</Text>
+          <Text className={styles.summaryLabel}>待收 ({summary.unpaidCount})</Text>
         </View>
         <View className={styles.summaryCard}>
           <Text className={styles.summaryValue}>{summary.paidCount}</Text>
@@ -232,14 +230,14 @@ const BillsPage: React.FC = () => {
       )}
 
       <View className={styles.tabBar}>
-        {tabs.map(tab => (
+        {STATUS_TABS.map(tab => (
           <View
             key={tab.key}
             className={classnames(styles.tabItem, activeTab === tab.key && styles.active)}
             onClick={() => setActiveTab(tab.key)}
           >
             <Text className={styles.tabText}>{tab.label}</Text>
-            <Text className={styles.tabCount}>{tabCounts[tab.key]}</Text>
+            <Text className={styles.tabCount}>{tabCounts[tab.key as keyof typeof tabCounts] || 0}</Text>
           </View>
         ))}
       </View>
@@ -247,7 +245,7 @@ const BillsPage: React.FC = () => {
       <View className={styles.billList}>
         {filteredBills.length === 0 ? (
           <View className={styles.emptyState}>
-            <Text className={styles.emptyIcon}>�</Text>
+            <Text className={styles.emptyIcon}>📋</Text>
             <Text className={styles.emptyText}>暂无符合条件的账单</Text>
           </View>
         ) : (
@@ -255,8 +253,8 @@ const BillsPage: React.FC = () => {
             <BillCard
               key={bill.id}
               bill={bill}
-              onClick={() => handleBillDetail(bill)}
-              onQuickPay={bill.status === 'pending' ? () => handleQuickPay(bill) : undefined}
+              onClick={() => handleCardClick(bill)}
+              onSettle={() => handleSettle(bill)}
               onAddFilm={() => handleAddFilm(bill)}
             />
           ))

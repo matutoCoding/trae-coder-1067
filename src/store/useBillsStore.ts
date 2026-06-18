@@ -7,15 +7,15 @@ import type {
   Booking,
   MemberLevel,
   BillOperationLog,
+  BillStatus,
   MonthlyStats,
   RevenueStatItem
 } from '@/types'
-import { mockBills, getBillStatusLabel } from '@/data/mockBills'
+import { mockBills } from '@/data/mockBills'
 import { usePricingStore } from './usePricingStore'
 import { useScheduleStore } from './useScheduleStore'
 import { calculatePricing, calculateFilmPrice } from '@/utils/pricing'
-import { getPhotographerByName } from '@/data/mockPhotographers'
-import { getMemberLevelLabel } from '@/data/mockPhotographers'
+import { getPhotographerByName, getMemberLevelLabel } from '@/data/mockPhotographers'
 
 const generateBillNo = (): string => {
   const now = dayjs()
@@ -23,13 +23,13 @@ const generateBillNo = (): string => {
   return `${now.format('YYYYMMDD')}-${random}`
 }
 
-const createOperationLog = (
+const createOpLog = (
   billId: string,
   operation: BillOperationLog['operation'],
   amount: number,
   changeAmount: number,
-  previousStatus: Bill['status'],
-  newStatus: Bill['status'],
+  previousStatus: BillStatus,
+  newStatus: BillStatus,
   notes?: string,
   operator: string = '前台'
 ): BillOperationLog => ({
@@ -49,6 +49,7 @@ interface BillsState {
   bills: Bill[]
   currentBill: Bill | null
   setCurrentBill: (bill: Bill | null) => void
+  getBillById: (id: string) => Bill | undefined
   generateBill: (
     booking: Booking,
     stationName: string,
@@ -58,15 +59,15 @@ interface BillsState {
   ) => Bill | null
   addFilmRecord: (billId: string, record: Omit<FilmRecord, 'id' | 'price' | 'createdAt'>) => boolean
   removeFilmRecord: (billId: string, recordId: string) => boolean
-  updateBillStatus: (billId: string, status: Bill['status']) => boolean
+  updateBillStatus: (billId: string, status: BillStatus) => boolean
   payBill: (billId: string, amount?: number, notes?: string) => boolean
   refundBill: (billId: string, amount: number, isFullRefund: boolean, notes?: string) => boolean
   cancelBill: (billId: string, notes?: string) => boolean
   recalculateBill: (billId: string) => boolean
   getBillsByPhotographer: (photographerId: string) => Bill[]
-  getBillsByStatus: (status: Bill['status']) => Bill[]
+  getBillsByStatus: (status: BillStatus) => Bill[]
   getBillsByFilter: (filter: {
-    status?: Bill['status']
+    status?: BillStatus
     stationId?: string
     photographerId?: string
     memberLevel?: MemberLevel
@@ -78,12 +79,27 @@ interface BillsState {
   getMonthlyStats: (month: string) => MonthlyStats
 }
 
+const updateBillInState = (
+  state: BillsState,
+  billId: string,
+  updater: (bill: Bill) => Bill
+): { bills: Bill[]; currentBill: Bill | null } => {
+  const updatedBills = state.bills.map(b => b.id === billId ? updater(b) : b)
+  const updatedBill = updatedBills.find(b => b.id === billId) || null
+  const updatedCurrentBill = state.currentBill?.id === billId ? updatedBill : state.currentBill
+  return { bills: updatedBills, currentBill: updatedCurrentBill }
+}
+
 export const useBillsStore = create<BillsState>((set, get) => ({
   bills: mockBills,
   currentBill: null,
 
   setCurrentBill: (bill) => {
     set({ currentBill: bill })
+  },
+
+  getBillById: (id) => {
+    return get().bills.find(b => b.id === id)
   },
 
   generateBill: (booking, stationName, stationHourlyRate, filmRecords = [], extraDiscountRate = 0) => {
@@ -105,6 +121,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const filmFee = filmRecords.reduce((sum, r) => sum + r.price, 0)
     const totalBeforeExtra = pricingResult.stationFee + filmFee - pricingResult.memberDiscountAmount
     const extraDiscountAmount = Math.round(totalBeforeExtra * extraDiscountRate * 100) / 100
+    const total = Math.round((totalBeforeExtra - extraDiscountAmount) * 100) / 100
 
     const newBill: Bill = {
       id: `BL-${Date.now()}`,
@@ -114,7 +131,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       photographerName: booking.photographerName,
       photographerLevel: memberLevel,
       stationId: booking.stationId,
-      stationName: stationName,
+      stationName,
       date: booking.date,
       totalHours: booking.duration,
       tierBreakdown,
@@ -125,15 +142,15 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       discountAmount: extraDiscountAmount,
       discountRate: extraDiscountRate,
       refundAmount: 0,
-      total: Math.round((totalBeforeExtra - extraDiscountAmount) * 100) / 100,
+      total,
       status: 'unpaid',
       filmRecords: [...filmRecords],
       operationLogs: [
-        createOperationLog(
+        createOpLog(
           `BL-${Date.now()}`,
           'create',
-          Math.round((totalBeforeExtra - extraDiscountAmount) * 100) / 100,
-          Math.round((totalBeforeExtra - extraDiscountAmount) * 100) / 100,
+          total,
+          total,
           'unpaid',
           'unpaid',
           `${getMemberLevelLabel(memberLevel)}，自动生成账单`
@@ -144,19 +161,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     newBill.operationLogs[0].billId = newBill.id
 
-    console.log('[BillsStore] 生成账单:', {
-      id: newBill.id,
-      billNo: newBill.billNo,
-      memberLevel,
-      station: stationName,
-      hourlyRate,
-      hours: booking.duration,
-      stationFee: pricingResult.stationFee,
-      filmFee,
-      memberDiscount: pricingResult.memberDiscountAmount,
-      extraDiscount: extraDiscountAmount,
-      total: newBill.total
-    })
+    console.log('[BillsStore] 生成账单:', newBill.id, newBill.billNo, '总金额:', total)
 
     set((state) => ({
       bills: [...state.bills, newBill],
@@ -185,31 +190,19 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       createdAt: dayjs().toISOString()
     }
 
-    console.log('[BillsStore] 添加胶片记录:', {
-      id: newRecord.id,
-      filmType: newRecord.filmType,
-      format: newRecord.format,
-      quantity: newRecord.quantity,
-      price
-    })
+    console.log('[BillsStore] 添加胶片:', newRecord.filmType, newRecord.format, '×', newRecord.quantity, '¥', price)
 
     set((state) => {
-      const updatedBills = state.bills.map(b => {
-        if (b.id !== billId) return b
+      const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => {
         const newFilmFee = b.filmFee + price
         const totalBeforeExtra = b.stationFee + newFilmFee - b.memberDiscountAmount
         const newDiscountAmount = Math.round(totalBeforeExtra * b.discountRate * 100) / 100
         const newTotal = Math.round((totalBeforeExtra - newDiscountAmount) * 100) / 100
         const newOriginalTotal = b.originalTotal + price
 
-        const log = createOperationLog(
-          billId,
-          'update',
-          newTotal,
-          newTotal - b.total,
-          b.status,
-          b.status,
-          `添加胶片: ${newRecord.filmType} × ${newRecord.quantity}`
+        const log = createOpLog(
+          billId, 'film_add', newTotal, newTotal - b.total, b.status, b.status,
+          `添加胶片: ${newRecord.filmType} ${newRecord.format} × ${newRecord.quantity}，¥${price}`
         )
 
         return {
@@ -223,16 +216,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
         }
       })
 
-      let updatedCurrentBill = state.currentBill
-      if (state.currentBill?.id === billId) {
-        const updated = updatedBills.find(b => b.id === billId)
-        if (updated) updatedCurrentBill = updated
-      }
-
-      return {
-        bills: updatedBills,
-        currentBill: updatedCurrentBill
-      }
+      return { bills: updatedBills, currentBill: updatedCurrentBill }
     })
 
     return true
@@ -242,28 +226,21 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const { bills } = get()
     const bill = bills.find(b => b.id === billId)
     const record = bill?.filmRecords.find(r => r.id === recordId)
-
     if (!record) return false
 
-    console.log('[BillsStore] 删除胶片记录:', recordId, '价格:', record.price)
+    console.log('[BillsStore] 删除胶片:', recordId, '¥', record.price)
 
     set((state) => {
-      const updatedBills = state.bills.map(b => {
-        if (b.id !== billId) return b
+      const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => {
         const newFilmFee = b.filmFee - record.price
         const totalBeforeExtra = b.stationFee + newFilmFee - b.memberDiscountAmount
         const newDiscountAmount = Math.round(totalBeforeExtra * b.discountRate * 100) / 100
         const newTotal = Math.round((totalBeforeExtra - newDiscountAmount) * 100) / 100
         const newOriginalTotal = b.originalTotal - record.price
 
-        const log = createOperationLog(
-          billId,
-          'update',
-          newTotal,
-          newTotal - b.total,
-          b.status,
-          b.status,
-          `删除胶片: ${record.filmType} × ${record.quantity}`
+        const log = createOpLog(
+          billId, 'film_remove', newTotal, newTotal - b.total, b.status, b.status,
+          `删除胶片: ${record.filmType} × ${record.quantity}，-¥${record.price}`
         )
 
         return {
@@ -277,16 +254,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
         }
       })
 
-      let updatedCurrentBill = state.currentBill
-      if (state.currentBill?.id === billId) {
-        const updated = updatedBills.find(b => b.id === billId)
-        if (updated) updatedCurrentBill = updated
-      }
-
-      return {
-        bills: updatedBills,
-        currentBill: updatedCurrentBill
-      }
+      return { bills: updatedBills, currentBill: updatedCurrentBill }
     })
 
     return true
@@ -295,16 +263,15 @@ export const useBillsStore = create<BillsState>((set, get) => ({
   updateBillStatus: (billId, status) => {
     console.log('[BillsStore] 更新账单状态:', billId, '→', status)
 
-    set((state) => ({
-      bills: state.bills.map(b =>
-        b.id === billId
-          ? { ...b, status, paidAt: status === 'paid' ? dayjs().toISOString() : b.paidAt }
-          : b
-      ),
-      currentBill: state.currentBill?.id === billId
-        ? { ...state.currentBill, status, paidAt: status === 'paid' ? dayjs().toISOString() : state.currentBill.paidAt }
-        : state.currentBill
-    }))
+    set((state) => {
+      const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
+        ...b,
+        status,
+        paidAt: status === 'paid' ? dayjs().toISOString() : b.paidAt
+      }))
+
+      return { bills: updatedBills, currentBill: updatedCurrentBill }
+    })
 
     return true
   },
@@ -314,132 +281,140 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     if (!bill || bill.status !== 'unpaid') return false
 
     const payAmount = amount ?? bill.total
-    const log = createOperationLog(
-      billId,
-      'pay',
-      payAmount,
-      payAmount,
-      'unpaid',
-      'paid',
-      notes
-    )
+    const log = createOpLog(billId, 'pay', payAmount, payAmount, 'unpaid', 'paid', notes)
 
     console.log('[BillsStore] 账单收款:', billId, '金额:', payAmount)
 
-    set((state) => ({
-      bills: state.bills.map(b =>
-        b.id === billId
-          ? { ...b, status: 'paid', paidAt: dayjs().toISOString(), operationLogs: [...b.operationLogs, log] }
-          : b
-      ),
-      currentBill: state.currentBill?.id === billId
-        ? { ...state.currentBill, status: 'paid', paidAt: dayjs().toISOString(), operationLogs: [...state.currentBill.operationLogs, log] }
-        : state.currentBill
-    }))
+    set((state) => {
+      const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
+        ...b,
+        status: 'paid' as BillStatus,
+        paidAt: dayjs().toISOString(),
+        operationLogs: [...b.operationLogs, log]
+      }))
+
+      return { bills: updatedBills, currentBill: updatedCurrentBill }
+    })
 
     return true
   },
 
   refundBill: (billId, amount, isFullRefund, notes = '') => {
     const bill = get().bills.find(b => b.id === billId)
-    if (!bill || bill.status !== 'paid') return false
-    if (amount <= 0 || amount > bill.total) return false
+    if (!bill) return false
 
-    const { cancelBooking } = useScheduleStore.getState()
+    const canRefundFromStatuses: BillStatus[] = ['paid', 'refunded']
+    if (!canRefundFromStatuses.includes(bill.status)) return false
 
-    const operation = isFullRefund ? 'full_refund' : 'partial_refund'
-    const newStatus: Bill['status'] = isFullRefund ? 'refunded' : 'refunded'
-    const logNotes = isFullRefund ? `全额退款: ¥${amount}` : `部分退款: ¥${amount}`
+    const alreadyRefunded = bill.refundAmount || 0
+    const maxRefundable = bill.total - alreadyRefunded
+    if (amount <= 0 || amount > maxRefundable) return false
 
-    const log = createOperationLog(
-      billId,
-      operation,
-      amount,
-      -amount,
-      'paid',
-      newStatus,
-      `${notes || logNotes}`
+    const operation = isFullRefund ? 'full_refund' as const : 'partial_refund' as const
+    const newRefundAmount = alreadyRefunded + amount
+    const isFullyRefundedNow = newRefundAmount >= bill.total
+    const newStatus: BillStatus = isFullyRefundedNow ? 'refunded' : bill.status
+    const logNotes = isFullRefund
+      ? `全额退款 ¥${amount}`
+      : `部分退款 ¥${amount}（累计已退 ¥${newRefundAmount}）`
+
+    const log = createOpLog(
+      billId, operation, amount, -amount,
+      bill.status, newStatus,
+      notes || logNotes
     )
 
-    const newRefundAmount = bill.refundAmount + amount
-    const newTotal = bill.total - amount
-
     console.log('[BillsStore] 账单退款:', {
-      billId,
-      amount,
-      isFullRefund,
-      previousRefund: bill.refundAmount,
+      billId, amount, isFullRefund,
+      previousRefund: alreadyRefunded,
       newRefundAmount,
-      previousTotal: bill.total,
-      newTotal
+      newStatus
     })
 
-    if (bill.bookingId && isFullRefund) {
+    const { cancelBooking } = useScheduleStore.getState()
+    if (isFullyRefundedNow && bill.bookingId) {
       cancelBooking(bill.bookingId)
-      console.log('[BillsStore] 已释放工位占用:', bill.bookingId)
+      console.log('[BillsStore] 全额退款完成，释放工位:', bill.bookingId)
     }
 
-    set((state) => ({
-      bills: state.bills.map(b =>
-        b.id === billId
-          ? {
-              ...b,
-              status: newStatus,
-              refundAmount: newRefundAmount,
-              total: Math.max(0, newTotal),
-              operationLogs: [...b.operationLogs, log]
-            }
-          : b
-      ),
-      currentBill: state.currentBill?.id === billId
-        ? {
-            ...state.currentBill,
-            status: newStatus,
-            refundAmount: newRefundAmount,
-            total: Math.max(0, newTotal),
-            operationLogs: [...state.currentBill.operationLogs, log]
-          }
-        : state.currentBill
-    }))
+    set((state) => {
+      const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
+        ...b,
+        status: newStatus,
+        refundAmount: newRefundAmount,
+        operationLogs: [...b.operationLogs, log]
+      }))
+
+      return { bills: updatedBills, currentBill: updatedCurrentBill }
+    })
 
     return true
   },
 
   cancelBill: (billId, notes = '用户取消') => {
     const bill = get().bills.find(b => b.id === billId)
-    if (!bill || bill.status === 'cancelled' || bill.status === 'paid' || bill.status === 'refunded') return false
+    if (!bill || bill.status === 'cancelled') return false
 
     const { cancelBooking } = useScheduleStore.getState()
 
-    const log = createOperationLog(
-      billId,
-      'cancel',
-      0,
-      -bill.total,
-      bill.status,
-      'cancelled',
-      notes
-    )
+    if (bill.status === 'unpaid') {
+      const log = createOpLog(billId, 'cancel', 0, -bill.total, bill.status, 'cancelled', notes)
 
-    if (bill.bookingId) {
-      cancelBooking(bill.bookingId)
-      console.log('[BillsStore] 已释放工位占用:', bill.bookingId)
+      if (bill.bookingId) {
+        cancelBooking(bill.bookingId)
+        console.log('[BillsStore] 取消未支付账单，释放工位:', bill.bookingId)
+      }
+
+      console.log('[BillsStore] 取消未支付账单:', billId)
+
+      set((state) => {
+        const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
+          ...b,
+          status: 'cancelled' as BillStatus,
+          refundAmount: b.total,
+          operationLogs: [...b.operationLogs, log]
+        }))
+
+        return { bills: updatedBills, currentBill: updatedCurrentBill }
+      })
+
+      return true
     }
 
-    console.log('[BillsStore] 取消账单:', billId, '原金额:', bill.total)
+    if (bill.status === 'paid' || bill.status === 'refunded') {
+      const alreadyRefunded = bill.refundAmount || 0
+      const refundRemaining = bill.total - alreadyRefunded
 
-    set((state) => ({
-      bills: state.bills.map(b =>
-        b.id === billId
-          ? { ...b, status: 'cancelled', total: 0, operationLogs: [...b.operationLogs, log] }
-          : b
-      ),
-      currentBill: state.currentBill?.id === billId
-        ? { ...state.currentBill, status: 'cancelled', total: 0, operationLogs: [...state.currentBill.operationLogs, log] }
-        : state.currentBill
-    }))
+      if (refundRemaining <= 0) return false
 
-    return true
+      const log = createOpLog(
+        billId, 'cancel', refundRemaining, -refundRemaining,
+        bill.status, 'cancelled',
+        `${notes}，全额退款 ¥${refundRemaining}${alreadyRefunded > 0 ? `（含之前已退 ¥${alreadyRefunded}）` : ''}`
+      )
+
+      if (bill.bookingId) {
+        cancelBooking(bill.bookingId)
+        console.log('[BillsStore] 取消已支付账单，全额退款并释放工位:', bill.bookingId)
+      }
+
+      console.log('[BillsStore] 取消已支付账单:', billId, '退款:', refundRemaining)
+
+      set((state) => {
+        const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
+          ...b,
+          status: 'cancelled' as BillStatus,
+          refundAmount: b.total,
+          operationLogs: [...b.operationLogs, log]
+        }))
+
+        return { bills: updatedBills, currentBill: updatedCurrentBill }
+      })
+
+      return true
+    }
+
+    return false
   },
 
   recalculateBill: (billId) => {
@@ -454,11 +429,9 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const hourlyRate = station?.hourlyRate || 80
 
     const pricingResult = calculatePricing(
-      bill.totalHours,
-      tiers,
+      bill.totalHours, tiers,
       bill.photographerLevel || 'normal',
-      hourlyRate,
-      bill.discountRate
+      hourlyRate, bill.discountRate
     )
 
     const tierBreakdown: TierBreakdownItem[] = pricingResult.tierBreakdown.map(item => ({
@@ -470,55 +443,29 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const extraDiscountAmount = Math.round(totalBeforeExtra * bill.discountRate * 100) / 100
     const newTotal = Math.round((totalBeforeExtra - extraDiscountAmount) * 100) / 100
     const newOriginalTotal = pricingResult.originalTotal + bill.filmFee
+    const change = newTotal - bill.total
 
-    const log = createOperationLog(
-      billId,
-      'update',
-      newTotal,
-      newTotal - bill.total,
-      bill.status,
-      bill.status,
-      '重新计价'
+    const log = createOpLog(
+      billId, 'recalculate', newTotal, change, bill.status, bill.status,
+      `重新计价：${change >= 0 ? '+' : ''}¥${Math.abs(change).toFixed(2)}`
     )
 
-    console.log('[BillsStore] 重新计价:', {
-      billId,
-      previousTotal: bill.total,
-      newTotal,
-      change: newTotal - bill.total,
-      station: station?.name,
-      hourlyRate,
-      hours: bill.totalHours
-    })
+    console.log('[BillsStore] 重新计价:', billId, '变化:', change)
 
-    set((state) => ({
-      bills: state.bills.map(b =>
-        b.id === billId
-          ? {
-              ...b,
-              tierBreakdown,
-              originalTotal: newOriginalTotal,
-              stationFee: pricingResult.stationFee,
-              memberDiscountAmount: pricingResult.memberDiscountAmount,
-              discountAmount: extraDiscountAmount,
-              total: newTotal,
-              operationLogs: [...b.operationLogs, log]
-            }
-          : b
-      ),
-      currentBill: state.currentBill?.id === billId
-        ? {
-            ...state.currentBill,
-            tierBreakdown,
-            originalTotal: newOriginalTotal,
-            stationFee: pricingResult.stationFee,
-            memberDiscountAmount: pricingResult.memberDiscountAmount,
-            discountAmount: extraDiscountAmount,
-            total: newTotal,
-            operationLogs: [...state.currentBill.operationLogs, log]
-          }
-        : state.currentBill
-    }))
+    set((state) => {
+      const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
+        ...b,
+        tierBreakdown,
+        originalTotal: newOriginalTotal,
+        stationFee: pricingResult.stationFee,
+        memberDiscountAmount: pricingResult.memberDiscountAmount,
+        discountAmount: extraDiscountAmount,
+        total: newTotal,
+        operationLogs: [...b.operationLogs, log]
+      }))
+
+      return { bills: updatedBills, currentBill: updatedCurrentBill }
+    })
 
     return true
   },
@@ -536,24 +483,12 @@ export const useBillsStore = create<BillsState>((set, get) => ({
   getBillsByFilter: (filter) => {
     let result = [...get().bills]
 
-    if (filter.status) {
-      result = result.filter(b => b.status === filter.status)
-    }
-    if (filter.stationId) {
-      result = result.filter(b => b.stationId === filter.stationId)
-    }
-    if (filter.photographerId) {
-      result = result.filter(b => b.photographerId === filter.photographerId)
-    }
-    if (filter.memberLevel) {
-      result = result.filter(b => b.photographerLevel === filter.memberLevel)
-    }
-    if (filter.startDate) {
-      result = result.filter(b => b.date >= filter.startDate!)
-    }
-    if (filter.endDate) {
-      result = result.filter(b => b.date <= filter.endDate!)
-    }
+    if (filter.status) result = result.filter(b => b.status === filter.status)
+    if (filter.stationId) result = result.filter(b => b.stationId === filter.stationId)
+    if (filter.photographerId) result = result.filter(b => b.photographerId === filter.photographerId)
+    if (filter.memberLevel) result = result.filter(b => b.photographerLevel === filter.memberLevel)
+    if (filter.startDate) result = result.filter(b => b.date >= filter.startDate!)
+    if (filter.endDate) result = result.filter(b => b.date <= filter.endDate!)
 
     return result.sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf())
   },
@@ -561,7 +496,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
   getTotalRevenue: () => {
     return get().bills
       .filter(b => b.status === 'paid')
-      .reduce((sum, b) => sum + b.total, 0)
+      .reduce((sum, b) => sum + b.total - (b.refundAmount || 0), 0)
   },
 
   getUnpaidAmount: () => {
@@ -582,17 +517,18 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     ]
     const memberLevels: MemberLevel[] = ['normal', 'silver', 'gold']
 
-    const monthBills = bills.filter(b =>
-      b.date.startsWith(month) && b.status !== 'cancelled'
-    )
+    const monthBills = bills.filter(b => b.date.startsWith(month))
 
     const dailyStatsMap = new Map<string, { revenue: number; hours: number }>()
 
     monthBills.forEach(bill => {
+      const actualRevenue = bill.status === 'paid'
+        ? bill.total - (bill.refundAmount || 0)
+        : (bill.status === 'unpaid' ? 0 : 0)
       const key = bill.date
       const existing = dailyStatsMap.get(key) || { revenue: 0, hours: 0 }
       dailyStatsMap.set(key, {
-        revenue: existing.revenue + bill.total,
+        revenue: existing.revenue + actualRevenue,
         hours: existing.hours + bill.totalHours
       })
     })
@@ -601,9 +537,15 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       .map(([date, stats]) => ({ date, ...stats }))
       .sort((a, b) => a.date.localeCompare(b.date))
 
+    const calcActualRevenue = (billsArr: Bill[]) =>
+      billsArr.reduce((sum, b) => {
+        if (b.status === 'paid') return sum + b.total - (b.refundAmount || 0)
+        return sum
+      }, 0)
+
     const stationStats: RevenueStatItem[] = stations.map(station => {
       const stationBills = monthBills.filter(b => b.stationId === station.id)
-      const totalRevenue = stationBills.reduce((sum, b) => sum + b.total, 0)
+      const totalRevenue = calcActualRevenue(stationBills)
       const totalHours = stationBills.reduce((sum, b) => sum + b.totalHours, 0)
       const billCount = stationBills.length
       return {
@@ -618,7 +560,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     const photographerStats: RevenueStatItem[] = photographers.map(ph => {
       const phBills = monthBills.filter(b => b.photographerId === ph.id)
-      const totalRevenue = phBills.reduce((sum, b) => sum + b.total, 0)
+      const totalRevenue = calcActualRevenue(phBills)
       const totalHours = phBills.reduce((sum, b) => sum + b.totalHours, 0)
       const billCount = phBills.length
       return {
@@ -633,7 +575,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     const memberLevelStats: RevenueStatItem[] = memberLevels.map(level => {
       const levelBills = monthBills.filter(b => b.photographerLevel === level)
-      const totalRevenue = levelBills.reduce((sum, b) => sum + b.total, 0)
+      const totalRevenue = calcActualRevenue(levelBills)
       const totalHours = levelBills.reduce((sum, b) => sum + b.totalHours, 0)
       const billCount = levelBills.length
       return {
@@ -646,17 +588,14 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       }
     })
 
-    const totalRevenue = monthBills
-      .filter(b => b.status === 'paid')
-      .reduce((sum, b) => sum + b.total, 0)
-
+    const totalRevenue = calcActualRevenue(monthBills)
     const totalHours = monthBills.reduce((sum, b) => sum + b.totalHours, 0)
 
     return {
       month,
       totalRevenue,
       totalHours,
-      totalBills: monthBills.length,
+      totalBills: monthBills.filter(b => b.status !== 'cancelled').length,
       stationStats,
       photographerStats,
       memberLevelStats,

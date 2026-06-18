@@ -1,29 +1,32 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView, Button, Input, Textarea } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import styles from './index.module.scss'
 import classnames from 'classnames'
 import dayjs from 'dayjs'
 import { useBillsStore } from '@/store/useBillsStore'
-import type { Bill, BillOperationLog, BillStatus } from '@/types'
+import type { BillStatus } from '@/types'
 import { MEMBER_LEVELS } from '@/types'
 import { formatCurrency, formatDuration } from '@/utils/pricing'
-import { getOperationLabel } from '@/data/mockBills'
+import { getOperationLabel, getBillStatusLabel, getBillStatusColor } from '@/data/mockBills'
 import TierBreakdown from '@/components/TierBreakdown'
+
+const STATUS_CONFIG: Record<BillStatus, { label: string; className: string }> = {
+  unpaid: { label: '待支付', className: styles.unpaid },
+  paid: { label: '已支付', className: styles.paid },
+  refunded: { label: '已退款', className: styles.refunded },
+  cancelled: { label: '已取消', className: styles.cancelled }
+}
 
 const BillDetailPage: React.FC = () => {
   const router = useRouter()
   const billId = router.params.id as string
-  const {
-    bills,
-    currentBill,
-    getBillById,
-    payBill,
-    refundBill,
-    cancelBill,
-    recalculateBill,
-    setCurrentBill
-  } = useBillsStore()
+
+  const bills = useBillsStore(state => state.bills)
+  const payBill = useBillsStore(state => state.payBill)
+  const refundBill = useBillsStore(state => state.refundBill)
+  const cancelBill = useBillsStore(state => state.cancelBill)
+  const recalculateBill = useBillsStore(state => state.recalculateBill)
 
   const [showRefundModal, setShowRefundModal] = useState(false)
   const [showPayModal, setShowPayModal] = useState(false)
@@ -32,76 +35,77 @@ const BillDetailPage: React.FC = () => {
   const [operationNotes, setOperationNotes] = useState('')
 
   const bill = useMemo(() => {
-    return currentBill || getBillById(billId) || null
-  }, [billId, bills, currentBill, getBillById])
+    if (!billId) return null
+    return bills.find(b => b.id === billId) || null
+  }, [billId, bills])
 
-  useEffect(() => {
-    if (billId && !currentBill) {
-      const found = getBillById(billId)
-      if (found) setCurrentBill(found)
-    }
-    return () => {
-      setCurrentBill(null)
-    }
-  }, [billId, currentBill, getBillById, setCurrentBill])
-
-  const statusConfig: Record<BillStatus, { label: string; className: string; color: string }> = {
-    pending: { label: '待支付', className: styles.pending, color: '#FFA940' },
-    paid: { label: '已支付', className: styles.paid, color: '#52C41A' },
-    refunded: { label: '已退款', className: styles.refunded, color: '#7A7A9D' },
-    cancelled: { label: '已取消', className: styles.refunded, color: '#F5222D' }
-  }
+  const maxRefundable = useMemo(() => {
+    if (!bill) return 0
+    return Math.max(0, bill.total - (bill.refundAmount || 0))
+  }, [bill])
 
   const handlePay = () => {
     if (!bill) return
-    const amount = payAmount ? parseFloat(payAmount) : bill.total - (bill.refundAmount || 0)
+    const amount = payAmount ? parseFloat(payAmount) : bill.total
     if (amount <= 0) {
       Taro.showToast({ title: '金额无效', icon: 'none' })
       return
     }
-    const success = payBill(bill.id, amount, operationNotes)
+    const success = payBill(bill.id, amount, operationNotes || undefined)
     if (success) {
       Taro.showToast({ title: '收款成功', icon: 'success' })
       setShowPayModal(false)
       setPayAmount('')
       setOperationNotes('')
+    } else {
+      Taro.showToast({ title: '收款失败', icon: 'none' })
     }
   }
 
   const handleRefund = (isFull: boolean) => {
     if (!bill) return
     const amount = isFull
-      ? bill.total - (bill.refundAmount || 0)
+      ? maxRefundable
       : parseFloat(refundAmount) || 0
 
     if (amount <= 0) {
       Taro.showToast({ title: '退款金额无效', icon: 'none' })
       return
     }
-    if (amount > bill.total - (bill.refundAmount || 0)) {
+    if (amount > maxRefundable) {
       Taro.showToast({ title: '退款金额超过可退金额', icon: 'none' })
       return
     }
 
-    const success = refundBill(bill.id, amount, isFull, operationNotes)
+    const success = refundBill(bill.id, amount, isFull, operationNotes || undefined)
     if (success) {
       Taro.showToast({ title: isFull ? '全额退款成功' : '部分退款成功', icon: 'success' })
       setShowRefundModal(false)
       setRefundAmount('')
       setOperationNotes('')
+    } else {
+      Taro.showToast({ title: '退款失败', icon: 'none' })
     }
   }
 
   const handleCancel = () => {
     if (!bill) return
+    const isPaid = bill.status === 'paid' || bill.status === 'refunded'
+    const content = isPaid
+      ? '取消后将全额退款并释放工位占用，是否继续？'
+      : '取消后将释放工位占用，是否继续？'
+
     Taro.showModal({
       title: '确认取消',
-      content: '取消后将释放工位占用，未收款账单将标记为已取消，已收款账单将全额退款。是否继续？',
+      content,
+      confirmColor: '#F5222D',
       success: (res) => {
         if (res.confirm) {
-          const success = cancelBill(bill.id, operationNotes)
+          const success = cancelBill(bill.id, operationNotes || undefined)
           if (success) {
             Taro.showToast({ title: '已取消', icon: 'success' })
+          } else {
+            Taro.showToast({ title: '取消失败', icon: 'none' })
           }
         }
       }
@@ -142,8 +146,7 @@ const BillDetailPage: React.FC = () => {
     )
   }
 
-  const status = statusConfig[bill.status]
-  const remainingPayable = bill.total - (bill.refundAmount || 0)
+  const status = STATUS_CONFIG[bill.status]
 
   return (
     <ScrollView className={styles.pageContainer} scrollY>
@@ -153,7 +156,8 @@ const BillDetailPage: React.FC = () => {
             <Text className={styles.headerTitle}>账单详情</Text>
             <Text className={styles.billNo}>单号：{bill.billNo}</Text>
           </View>
-          <View className={classnames(styles.statusBadge, status.className)}>
+          <View className={classnames(styles.statusBadge, status.className)}
+            style={{ borderColor: getBillStatusColor(bill.status), color: getBillStatusColor(bill.status) }}>
             <Text className={styles.statusText}>{status.label}</Text>
           </View>
         </View>
@@ -236,8 +240,7 @@ const BillDetailPage: React.FC = () => {
           {bill.memberDiscountAmount > 0 && (
             <View className={classnames(styles.feeRow, styles.discountRow)}>
               <Text className={styles.feeLabel}>
-                会员优惠
-                {bill.photographerLevel && ` (${getMemberLevelLabel(bill.photographerLevel)})`}
+                会员优惠{bill.photographerLevel ? ` (${getMemberLevelLabel(bill.photographerLevel)})` : ''}
               </Text>
               <Text className={styles.discountValue}>-{formatCurrency(bill.memberDiscountAmount)}</Text>
             </View>
@@ -258,16 +261,16 @@ const BillDetailPage: React.FC = () => {
             <Text className={styles.totalValue}>{formatCurrency(bill.total)}</Text>
           </View>
           {bill.refundAmount > 0 && (
-            <View className={classnames(styles.feeRow, styles.refundRow)}>
-              <Text className={styles.feeLabel}>已退款</Text>
-              <Text className={styles.refundValue}>-{formatCurrency(bill.refundAmount)}</Text>
-            </View>
-          )}
-          {bill.refundAmount > 0 && (
-            <View className={classnames(styles.feeRow, styles.remainingRow)}>
-              <Text className={styles.totalLabel}>剩余应收</Text>
-              <Text className={styles.totalValue}>{formatCurrency(remainingPayable)}</Text>
-            </View>
+            <>
+              <View className={classnames(styles.feeRow, styles.refundRow)}>
+                <Text className={styles.feeLabel}>已退款</Text>
+                <Text className={styles.refundValue}>-{formatCurrency(bill.refundAmount)}</Text>
+              </View>
+              <View className={classnames(styles.feeRow, styles.remainingRow)}>
+                <Text className={styles.totalLabel}>剩余可退</Text>
+                <Text className={styles.remainingValue}>{formatCurrency(maxRefundable)}</Text>
+              </View>
+            </>
           )}
         </View>
       </View>
@@ -275,11 +278,13 @@ const BillDetailPage: React.FC = () => {
       <View className={styles.section}>
         <View className={styles.sectionHeader}>
           <Text className={styles.sectionTitle}>胶片记录 ({bill.filmRecords.length})</Text>
-          <Text className={styles.sectionAction} onClick={handleAddFilm}>+ 添加</Text>
+          {bill.status !== 'cancelled' && bill.status !== 'refunded' && (
+            <Text className={styles.sectionAction} onClick={handleAddFilm}>+ 添加</Text>
+          )}
         </View>
         {bill.filmRecords.length === 0 ? (
           <View className={styles.emptyFilm}>
-            <Text className={styles.emptyFilmText}>暂无胶片记录，点击上方添加</Text>
+            <Text className={styles.emptyFilmText}>暂无胶片记录</Text>
           </View>
         ) : (
           <View className={styles.filmList}>
@@ -309,26 +314,31 @@ const BillDetailPage: React.FC = () => {
         </View>
         <View className={styles.timeline}>
           {bill.operationLogs.map((log, index) => (
-            <View key={index} className={styles.timelineItem}>
+            <View key={log.id || index} className={styles.timelineItem}>
               <View className={styles.timelineDot} />
-              <View className={styles.timelineLine} />
+              {index < bill.operationLogs.length - 1 && <View className={styles.timelineLine} />}
               <View className={styles.timelineContent}>
                 <View className={styles.timelineHeader}>
-                  <Text className={styles.operationType}>{getOperationLabel(log.operationType)}</Text>
+                  <Text className={styles.operationType}>{getOperationLabel(log.operation)}</Text>
                   <Text className={styles.operationTime}>
-                    {dayjs(log.timestamp).format('MM-DD HH:mm')}
+                    {dayjs(log.createdAt).format('MM-DD HH:mm')}
                   </Text>
                 </View>
-                {log.amountChange !== 0 && (
+                {log.changeAmount !== 0 && (
                   <Text className={classnames(
                     styles.amountChange,
-                    log.amountChange > 0 ? styles.positive : styles.negative
+                    log.changeAmount > 0 ? styles.positive : styles.negative
                   )}>
-                    {log.amountChange > 0 ? '+' : ''}{formatCurrency(log.amountChange)}
+                    {log.changeAmount > 0 ? '+' : ''}{formatCurrency(log.changeAmount)}
                   </Text>
                 )}
-                {log.balance !== undefined && (
-                  <Text className={styles.balance}>余额：{formatCurrency(log.balance)}</Text>
+                <Text className={styles.balanceAfter}>
+                  当前金额：{formatCurrency(log.amount)}
+                </Text>
+                {log.previousStatus !== log.newStatus && (
+                  <Text className={styles.statusChange}>
+                    {getBillStatusLabel(log.previousStatus)} → {getBillStatusLabel(log.newStatus)}
+                  </Text>
                 )}
                 {log.notes && (
                   <Text className={styles.operationNotes}>{log.notes}</Text>
@@ -341,23 +351,33 @@ const BillDetailPage: React.FC = () => {
       </View>
 
       <View className={styles.bottomActions}>
-        {bill.status === 'pending' && (
+        {bill.status === 'unpaid' && (
           <>
             <Button className={styles.btnPrimary} onClick={() => setShowPayModal(true)}>
               确认收款
             </Button>
-            <Button className={styles.btnSecondary} onClick={handleCancel}>
+            <Button className={styles.btnDanger} onClick={handleCancel}>
               取消订单
             </Button>
           </>
         )}
-        {bill.status === 'paid' && remainingPayable > 0 && (
+        {bill.status === 'paid' && (
           <>
-            <Button className={styles.btnPrimary} onClick={() => setShowRefundModal(true)}>
+            <Button className={styles.btnRefund} onClick={() => setShowRefundModal(true)}>
               申请退款
             </Button>
-            <Button className={styles.btnSecondary} onClick={handleCancel}>
+            <Button className={styles.btnDanger} onClick={handleCancel}>
               取消并全额退款
+            </Button>
+          </>
+        )}
+        {bill.status === 'refunded' && maxRefundable > 0 && (
+          <>
+            <Button className={styles.btnRefund} onClick={() => setShowRefundModal(true)}>
+              继续退款
+            </Button>
+            <Button className={styles.btnDanger} onClick={handleCancel}>
+              取消并退余款
             </Button>
           </>
         )}
@@ -370,14 +390,14 @@ const BillDetailPage: React.FC = () => {
             <View className={styles.modalBody}>
               <View className={styles.formItem}>
                 <Text className={styles.formLabel}>应收金额</Text>
-                <Text className={styles.formValue}>{formatCurrency(remainingPayable)}</Text>
+                <Text className={styles.formValue}>{formatCurrency(bill.total)}</Text>
               </View>
               <View className={styles.formItem}>
                 <Text className={styles.formLabel}>实收金额</Text>
                 <Input
                   className={styles.formInput}
                   type='digit'
-                  placeholder={`输入金额（默认 ${formatCurrency(remainingPayable)}）`}
+                  placeholder={`输入金额（默认 ${formatCurrency(bill.total)}）`}
                   value={payAmount}
                   onInput={e => setPayAmount(e.detail.value)}
                 />
@@ -407,14 +427,20 @@ const BillDetailPage: React.FC = () => {
             <View className={styles.modalBody}>
               <View className={styles.formItem}>
                 <Text className={styles.formLabel}>可退金额</Text>
-                <Text className={styles.formValue}>{formatCurrency(remainingPayable)}</Text>
+                <Text className={styles.formValue}>{formatCurrency(maxRefundable)}</Text>
               </View>
+              {bill.refundAmount > 0 && (
+                <View className={styles.formItem}>
+                  <Text className={styles.formLabel}>已退金额</Text>
+                  <Text className={styles.formRefundValue}>{formatCurrency(bill.refundAmount)}</Text>
+                </View>
+              )}
               <View className={styles.formItem}>
                 <Text className={styles.formLabel}>退款金额</Text>
                 <Input
                   className={styles.formInput}
                   type='digit'
-                  placeholder={`输入退款金额（不超过 ${formatCurrency(remainingPayable)}）`}
+                  placeholder={`输入退款金额（不超过 ${formatCurrency(maxRefundable)}）`}
                   value={refundAmount}
                   onInput={e => setRefundAmount(e.detail.value)}
                 />

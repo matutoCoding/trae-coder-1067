@@ -52,20 +52,30 @@
 .statusBadge {
   padding: $spacing-xs $spacing-md;
   border-radius: $radius-round;
+  border: 1rpx solid transparent;
 
-  &.pending {
-    background: rgba(#FFA940, 0.2);
-    .statusText { color: #FFA940; }
+  &.unpaid {
+    background: rgba(#FFAB00, 0.2);
+    border-color: #FFAB00;
+    .statusText { color: #FFAB00; }
   }
 
   &.paid {
     background: rgba(#52C41A, 0.2);
+    border-color: #52C41A;
     .statusText { color: #52C41A; }
   }
 
   &.refunded {
     background: rgba(#7A7A9D, 0.2);
+    border-color: #7A7A9D;
     .statusText { color: #7A7A9D; }
+  }
+
+  &.cancelled {
+    background: rgba(#F5222D, 0.2);
+    border-color: #F5222D;
+    .statusText { color: #F5222D; }
   }
 
   .statusText {
@@ -200,6 +210,12 @@
 
   .remainingRow {
     padding-top: $spacing-sm;
+
+    .remainingValue {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
   }
 
   .feeDivider {
@@ -354,9 +370,15 @@
     }
   }
 
-  .balance {
+  .balanceAfter {
     font-size: $font-size-sm;
     color: $color-text-secondary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .statusChange {
+    font-size: $font-size-sm;
+    color: $color-primary;
     margin-bottom: $spacing-xs;
   }
 
@@ -385,6 +407,7 @@
   gap: $spacing-sm;
 
   .btnPrimary,
+  .btnRefund,
   .btnSecondary,
   .btnDanger {
     flex: 1;
@@ -397,6 +420,15 @@
 
   .btnPrimary {
     background: $color-primary;
+    color: $color-text-white;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btnRefund {
+    background: #FFAB00;
     color: $color-text-white;
 
     &::after {
@@ -477,6 +509,12 @@
     font-size: $font-size-xl;
     font-weight: $font-weight-bold;
     color: $color-price;
+  }
+
+  .formRefundValue {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: #F5222D;
   }
 
   .formInput {

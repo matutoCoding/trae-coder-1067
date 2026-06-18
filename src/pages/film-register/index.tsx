@@ -10,13 +10,15 @@ import { calculateFilmPrice, formatCurrency } from '@/utils/pricing'
 
 const FilmRegisterPage: React.FC = () => {
   const router = useRouter()
-  const { addFilmRecord, getBillById, currentBill, setCurrentBill, removeFilmRecord } = useBillsStore()
-
   const billId = router.params.billId as string
+  const bills = useBillsStore(state => state.bills)
+  const addFilmRecord = useBillsStore(state => state.addFilmRecord)
+  const removeFilmRecord = useBillsStore(state => state.removeFilmRecord)
 
   const bill = useMemo(() => {
-    return currentBill || (billId ? getBillById(billId) : null)
-  }, [currentBill, billId, getBillById])
+    if (!billId) return null
+    return bills.find(b => b.id === billId) || null
+  }, [billId, bills])
 
   const [filmType, setFilmType] = useState<string>(filmTypes[0].value)
   const [format, setFormat] = useState<FilmFormat | string>('135')
@@ -86,13 +88,6 @@ const FilmRegisterPage: React.FC = () => {
       }
     })
   }
-
-  useEffect(() => {
-    if (billId && !bill) {
-      const found = getBillById(billId)
-      if (found) setCurrentBill(found)
-    }
-  }, [billId, bill, getBillById, setCurrentBill])
 
   if (!bill) {
     return (
