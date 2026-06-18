@@ -1,0 +1,194 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
+  padding-bottom: 120rpx;
+
+  .pageHeader {
+    padding: $spacing-lg $page-padding;
+    background: transparent;
+
+    .headerTitle {
+      font-size: $font-size-xxl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    .headerSubtitle {
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .summaryCard {
+    margin: 0 $page-padding $spacing-lg;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    border-radius: $radius-xl;
+    padding: $spacing-xl;
+    box-shadow: $shadow-float;
+
+    .summaryTitle {
+      font-size: $font-size-sm;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: $spacing-md;
+    }
+
+    .summaryAmount {
+      font-size: 72rpx;
+      font-weight: $font-weight-bold;
+      color: $color-text-white;
+      margin-bottom: $spacing-lg;
+    }
+
+    .summaryRow {
+      display: flex;
+      justify-content: space-between;
+
+      .summaryItem {
+        flex: 1;
+        text-align: center;
+
+        .itemValue {
+          font-size: $font-size-xl;
+          font-weight: $font-weight-bold;
+          color: $color-text-white;
+          margin-bottom: $spacing-xs;
+        }
+
+        .itemLabel {
+          font-size: $font-size-xs;
+          color: rgba(255, 255, 255, 0.7);
+        }
+      }
+    }
+  }
+
+  .filterTabs {
+    display: flex;
+    gap: $spacing-sm;
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-lg;
+
+    .tabItem {
+      flex: 1;
+      height: $button-height-md;
+      border-radius: $radius-button;
+      background: $color-bg-card;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      transition: all $transition-base;
+
+      @include button-reset;
+
+      &.active {
+        background: $color-primary;
+        color: $color-text-white;
+      }
+
+      &:active {
+        transform: scale(0.96);
+      }
+
+      .badge {
+        margin-left: $spacing-xs;
+        padding: 2rpx 12rpx;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: $radius-round;
+        font-size: $font-size-xs;
+      }
+    }
+  }
+
+  .sectionTitle {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .countBadge {
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+      font-weight: $font-weight-normal;
+    }
+  }
+
+  .billList {
+    padding: 0 $page-padding;
+  }
+
+  .emptyState {
+    padding: $spacing-xl * 2;
+    text-align: center;
+
+    .emptyIcon {
+      font-size: 120rpx;
+      opacity: 0.3;
+      margin-bottom: $spacing-md;
+    }
+
+    .emptyText {
+      font-size: $font-size-md;
+      color: $color-text-tertiary;
+      margin-bottom: $spacing-lg;
+    }
+
+    .actionBtn {
+      display: inline-block;
+      padding: $spacing-md $spacing-xl;
+      background: $color-primary;
+      border-radius: $radius-button;
+      color: $color-text-white;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+
+      @include button-reset;
+    }
+  }
+
+  .quickActions {
+    position: fixed;
+    bottom: 140rpx;
+    right: $page-padding;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+
+    .fabBtn {
+      width: 112rpx;
+      height: 112rpx;
+      border-radius: 50%;
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: $shadow-float;
+      transition: all $transition-base;
+
+      @include button-reset;
+
+      &:active {
+        transform: scale(0.9);
+      }
+
+      .fabIcon {
+        font-size: 40rpx;
+        margin-bottom: 4rpx;
+      }
+
+      .fabLabel {
+        font-size: 20rpx;
+        color: $color-text-white;
+      }
+    }
+  }
+}

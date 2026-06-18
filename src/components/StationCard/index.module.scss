@@ -1,0 +1,108 @@
+@use '@/styles/variables.scss' as *;
+
+.stationCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.95;
+  }
+
+  .cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-md;
+
+    .stationName {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .stationType {
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $radius-sm;
+      font-size: $font-size-xs;
+      background: rgba($color-primary, 0.15);
+      color: $color-primary-light;
+    }
+  }
+
+  .cardBody {
+    .description {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      line-height: $line-height-normal;
+      margin-bottom: $spacing-md;
+    }
+
+    .equipmentList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $spacing-xs;
+      margin-bottom: $spacing-md;
+
+      .equipmentTag {
+        padding: $spacing-xs $spacing-sm;
+        background: $color-bg-hover;
+        border-radius: $radius-xs;
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+      }
+    }
+
+    .stationMeta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: $spacing-md;
+      border-top: 1px solid $color-divider;
+
+      .priceInfo {
+        .priceLabel {
+          font-size: $font-size-xs;
+          color: $color-text-tertiary;
+        }
+
+        .priceValue {
+          font-size: $font-size-xl;
+          font-weight: $font-weight-bold;
+          color: $color-price;
+        }
+
+        .priceUnit {
+          font-size: $font-size-xs;
+          color: $color-text-tertiary;
+        }
+      }
+
+      .statusBadge {
+        padding: $spacing-xs $spacing-md;
+        border-radius: $radius-round;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+
+        &.available {
+          background: rgba($color-success, 0.15);
+          color: $color-success;
+        }
+
+        &.maintenance {
+          background: rgba($color-warning, 0.15);
+          color: $color-warning;
+        }
+
+        &.disabled {
+          background: rgba($color-text-tertiary, 0.15);
+          color: $color-text-tertiary;
+        }
+      }
+    }
+  }
+}

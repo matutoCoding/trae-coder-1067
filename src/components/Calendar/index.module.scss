@@ -1,0 +1,135 @@
+@use '@/styles/variables.scss' as *;
+
+.calendar {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-card;
+
+  .calendarHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+
+    .navBtn {
+      width: 72rpx;
+      height: 72rpx;
+      border-radius: 50%;
+      background: $color-bg-hover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-lg;
+      color: $color-text-primary;
+      transition: all $transition-fast;
+
+      @include button-reset;
+
+      &:active {
+        transform: scale(0.9);
+        background: $color-primary;
+        color: $color-text-white;
+      }
+    }
+
+    .monthDisplay {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+  }
+
+  .weekdayRow {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: $spacing-md;
+
+    .weekday {
+      text-align: center;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $color-text-secondary;
+      padding: $spacing-sm 0;
+    }
+  }
+
+  .daysGrid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: $spacing-xs;
+
+    .dayCell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: $radius-md;
+      transition: all $transition-fast;
+      position: relative;
+
+      @include button-reset;
+
+      &.otherMonth {
+        opacity: 0.3;
+      }
+
+      &.today {
+        background: rgba($color-primary, 0.1);
+
+        .dayNumber {
+          color: $color-primary-light;
+          font-weight: $font-weight-semibold;
+        }
+      }
+
+      &.selected {
+        background: $color-primary;
+
+        .dayNumber {
+          color: $color-text-white;
+        }
+      }
+
+      &.hasBooking::after {
+        content: '';
+        position: absolute;
+        bottom: 8rpx;
+        width: 8rpx;
+        height: 8rpx;
+        border-radius: 50%;
+        background: $color-warning;
+      }
+
+      .dayNumber {
+        font-size: $font-size-sm;
+        color: $color-text-primary;
+      }
+    }
+  }
+
+  .dateInfo {
+    margin-top: $spacing-lg;
+    padding-top: $spacing-lg;
+    border-top: 1px solid $color-divider;
+
+    .selectedDate {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-sm;
+    }
+
+    .bookingCount {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+
+      .countHighlight {
+        color: $color-warning;
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+}

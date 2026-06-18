@@ -1,0 +1,293 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
+  padding-bottom: 120rpx;
+
+  .pageHeader {
+    padding: $spacing-lg $page-padding;
+    background: transparent;
+
+    .headerTitle {
+      font-size: $font-size-xxl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    .headerSubtitle {
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .statsBar {
+    display: flex;
+    gap: $spacing-md;
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-lg;
+
+    .statCard {
+      flex: 1;
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-md;
+      box-shadow: $shadow-card;
+
+      .statValue {
+        font-size: $font-size-xxl;
+        font-weight: $font-weight-bold;
+        color: $color-primary-light;
+        margin-bottom: $spacing-xs;
+      }
+
+      .statLabel {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+      }
+    }
+  }
+
+  .sectionTitle {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-md;
+  }
+
+  .stationList {
+    padding: 0 $page-padding;
+  }
+
+  .bookingModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+
+    .modalContent {
+      width: 100%;
+      max-height: 90vh;
+      background: $color-bg-page;
+      border-radius: $radius-xl $radius-xl 0 0;
+      padding: $spacing-lg;
+      overflow-y: auto;
+
+      .modalHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-lg;
+
+        .modalTitle {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $color-text-primary;
+        }
+
+        .closeBtn {
+          width: 64rpx;
+          height: 64rpx;
+          border-radius: 50%;
+          background: $color-bg-hover;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: $font-size-lg;
+          color: $color-text-secondary;
+
+          @include button-reset;
+
+          &:active {
+            transform: scale(0.9);
+          }
+        }
+      }
+
+      .bookingForm {
+        .formGroup {
+          margin-bottom: $spacing-lg;
+
+          .formLabel {
+            font-size: $font-size-sm;
+            color: $color-text-secondary;
+            margin-bottom: $spacing-sm;
+          }
+
+          .formInput {
+            width: 100%;
+            height: $button-height-md;
+            background: $color-bg-card;
+            border-radius: $radius-md;
+            padding: 0 $spacing-md;
+            font-size: $font-size-md;
+            color: $color-text-primary;
+            border: 2rpx solid $color-border;
+          }
+
+          .formTextarea {
+            width: 100%;
+            min-height: 160rpx;
+            background: $color-bg-card;
+            border-radius: $radius-md;
+            padding: $spacing-md;
+            font-size: $font-size-md;
+            color: $color-text-primary;
+            border: 2rpx solid $color-border;
+            line-height: $line-height-normal;
+          }
+        }
+
+        .submitBtn {
+          width: 100%;
+          height: $button-height-lg;
+          background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+          border-radius: $radius-button;
+          color: $color-text-white;
+          font-size: $font-size-md;
+          font-weight: $font-weight-semibold;
+          margin-top: $spacing-lg;
+
+          @include button-reset;
+
+          &:active {
+            opacity: 0.9;
+          }
+
+          &:disabled {
+            opacity: 0.5;
+          }
+        }
+      }
+    }
+  }
+
+  .mergeBanner {
+    margin: 0 $page-padding $spacing-lg;
+    padding: $spacing-md;
+    background: linear-gradient(135deg, rgba($color-warning, 0.15), rgba($color-warning, 0.05));
+    border: 1px solid rgba($color-warning, 0.3);
+    border-radius: $radius-md;
+
+    .bannerText {
+      font-size: $font-size-sm;
+      color: $color-warning;
+      line-height: $line-height-normal;
+    }
+
+    .bannerAction {
+      color: $color-primary-light;
+      font-weight: $font-weight-medium;
+      margin-left: $spacing-sm;
+    }
+  }
+
+  .bookingList {
+    padding: 0 $page-padding;
+  }
+
+  .bookingItem {
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    padding: $spacing-md;
+    margin-bottom: $spacing-md;
+    box-shadow: $shadow-card;
+
+    .bookingHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-sm;
+
+      .bookingTime {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+      }
+
+      .bookingStatus {
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $radius-round;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+
+        &.merged {
+          background: rgba($color-warning, 0.15);
+          color: $color-warning;
+        }
+
+        &.normal {
+          background: rgba($color-info, 0.15);
+          color: $color-info;
+        }
+      }
+    }
+
+    .bookingInfo {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      margin-bottom: $spacing-sm;
+    }
+
+    .bookingActions {
+      display: flex;
+      gap: $spacing-sm;
+      margin-top: $spacing-md;
+
+      .actionBtn {
+        flex: 1;
+        height: $button-height-sm;
+        border-radius: $radius-button;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+
+        @include button-reset;
+
+        &.cancel {
+          background: rgba($color-error, 0.1);
+          color: $color-error;
+        }
+
+        &.split {
+          background: rgba($color-warning, 0.1);
+          color: $color-warning;
+        }
+
+        &.bill {
+          background: rgba($color-primary, 0.1);
+          color: $color-primary-light;
+        }
+
+        &:active {
+          transform: scale(0.96);
+        }
+      }
+    }
+  }
+
+  .emptyState {
+    padding: $spacing-xl * 2;
+    text-align: center;
+
+    .emptyIcon {
+      font-size: 120rpx;
+      opacity: 0.3;
+      margin-bottom: $spacing-md;
+    }
+
+    .emptyText {
+      font-size: $font-size-md;
+      color: $color-text-tertiary;
+    }
+  }
+}

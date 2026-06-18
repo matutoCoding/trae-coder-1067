@@ -1,0 +1,184 @@
+@use '@/styles/variables.scss' as *;
+
+.timeSlotGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-lg;
+
+  .slotItem {
+    width: calc((100% - 48rpx) / 4;
+    min-width: 150rpx;
+    height: 88rpx;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    transition: all $transition-fast;
+    border: 2rpx solid transparent;
+
+    &.available {
+      background: rgba($color-success, 0.1);
+      color: $color-success;
+      border-color: rgba($color-success, 0.3);
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    &.occupied {
+      background: rgba($color-error, 0.1);
+      color: $color-text-disabled;
+      border-color: rgba($color-error, 0.3);
+    }
+
+    &.merged {
+      background: rgba($color-warning, 0.15);
+      color: $color-warning;
+      border-color: rgba($color-warning, 0.3);
+    }
+
+    &.locked {
+      background: rgba($color-text-tertiary, 0.1);
+      color: $color-text-disabled;
+    }
+
+    &.selected {
+      background: $color-primary;
+      color: $color-text-white;
+      border-color: $color-primary;
+    }
+
+    .slotTime {
+      font-size: $font-size-sm;
+    }
+
+    .slotLabel {
+      font-size: $font-size-xs;
+      opacity: 0.8;
+    }
+  }
+}
+
+.legendBar {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-md 0;
+  margin-bottom: $spacing-lg;
+  border-top: 1px solid $color-divider;
+  border-bottom: 1px solid $color-divider;
+
+  .legendItem {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+
+    .legendDot {
+      width: 16rpx;
+      height: 16rpx;
+      border-radius: 50%;
+
+      &.available { background: $color-success; }
+      &.occupied { background: $color-error; }
+      &.merged { background: $color-warning; }
+      &.selected { background: $color-primary; }
+    }
+
+    .legendText {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+.bookingSummary {
+  background: linear-gradient(135deg, rgba($color-primary, 0.1), rgba($color-primary-light, 0.1);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  .summaryTitle {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-md;
+  }
+
+  .summaryRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+
+    .summaryLabel {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+
+    .summaryValue {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $color-text-primary;
+    }
+
+    .priceHighlight {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $color-price;
+    }
+  }
+
+  .mergeHint {
+    margin-top: $spacing-md;
+    padding: $spacing-sm $spacing-md;
+    background: rgba($color-warning, 0.1);
+    border-radius: $radius-sm;
+
+    .hintText {
+      font-size: $font-size-xs;
+      color: $color-warning;
+    }
+  }
+}
+
+.actionButtons {
+  display: flex;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+
+  .actionBtn {
+    flex: 1;
+    height: $button-height-md;
+    border-radius: $radius-button;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    transition: all $transition-base;
+
+    @include button-reset;
+
+    &.primary {
+      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+      color: $color-text-white;
+    }
+
+    &.secondary {
+      background: $color-bg-hover;
+      color: $color-text-secondary;
+    }
+
+    &:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}

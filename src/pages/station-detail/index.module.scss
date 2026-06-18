@@ -1,0 +1,209 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
+  padding-bottom: 120rpx;
+
+  .stationHeader {
+    padding: $spacing-lg $page-padding;
+    background: $color-bg-card;
+
+    .stationName {
+      font-size: $font-size-xxl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-sm;
+    }
+
+    .stationType {
+      display: inline-block;
+      padding: $spacing-xs $spacing-md;
+      background: rgba($color-primary, 0.15);
+      color: $color-primary-light;
+      border-radius: $radius-round;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      margin-bottom: $spacing-md;
+    }
+
+    .stationDesc {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      line-height: $line-height-relaxed;
+    }
+  }
+
+  .equipmentList {
+    padding: $spacing-lg $page-padding;
+    background: $color-bg-page;
+
+    .sectionTitle {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-md;
+    }
+
+    .equipmentCard {
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-lg;
+      margin-bottom: $spacing-md;
+      box-shadow: $shadow-card;
+
+      .equipName {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-sm;
+      }
+
+      .equipSpecs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $spacing-sm;
+
+        .specTag {
+          padding: $spacing-xs $spacing-sm;
+          background: rgba($color-primary, 0.08);
+          color: $color-text-secondary;
+          border-radius: $radius-sm;
+          font-size: $font-size-xs;
+        }
+      }
+    }
+  }
+
+  .bookingHistory {
+    padding: 0 $page-padding $spacing-lg;
+
+    .sectionTitle {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-md;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .countBadge {
+        font-size: $font-size-sm;
+        color: $color-text-tertiary;
+        font-weight: $font-weight-normal;
+      }
+    }
+
+    .historyItem {
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-md $spacing-lg;
+      margin-bottom: $spacing-sm;
+      box-shadow: $shadow-card;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      .bookingInfo {
+        flex: 1;
+
+        .photographer {
+          font-size: $font-size-md;
+          font-weight: $font-weight-medium;
+          color: $color-text-primary;
+          margin-bottom: $spacing-xs;
+        }
+
+        .bookingTime {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+        }
+
+        .bookingDuration {
+          font-size: $font-size-xs;
+          color: $color-text-tertiary;
+          margin-top: $spacing-xs;
+        }
+      }
+
+      .statusTag {
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $radius-sm;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+
+        &.active {
+          background: rgba($color-success, 0.15);
+          color: $color-success;
+        }
+
+        &.completed {
+          background: rgba($color-text-tertiary, 0.15);
+          color: $color-text-tertiary;
+        }
+
+        &.cancelled {
+          background: rgba($color-error, 0.15);
+          color: $color-error;
+        }
+      }
+    }
+  }
+
+  .actionBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: $spacing-md $page-padding;
+    padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+    background: $color-bg-card;
+    border-top: 1rpx solid $color-divider;
+    display: flex;
+    gap: $spacing-md;
+
+    .btn {
+      flex: 1;
+      height: $button-height-lg;
+      border-radius: $radius-button;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-md;
+      font-weight: $font-weight-medium;
+      transition: all $transition-base;
+
+      @include button-reset;
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      &.secondary {
+        background: $color-bg-secondary;
+        color: $color-text-primary;
+      }
+
+      &.primary {
+        background: $color-primary;
+        color: $color-text-white;
+      }
+    }
+  }
+
+  .emptyState {
+    padding: $spacing-xl * 2;
+    text-align: center;
+
+    .emptyIcon {
+      font-size: 96rpx;
+      opacity: 0.3;
+      margin-bottom: $spacing-md;
+    }
+
+    .emptyText {
+      font-size: $font-size-md;
+      color: $color-text-tertiary;
+    }
+  }
+}

@@ -1,0 +1,148 @@
+@use '@/styles/variables.scss' as *;
+
+.tierCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  border-left: 6rpx solid transparent;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &.active {
+    border-left-color: $color-primary;
+  }
+
+  &.inactive {
+    opacity: 0.6;
+  }
+
+  .cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+
+    .tierName {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .tierBadge {
+      width: 24rpx;
+      height: 24rpx;
+      border-radius: 50%;
+    }
+  }
+
+  .cardBody {
+    .tierRange {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      margin-bottom: $spacing-sm;
+    }
+
+    .tierDescription {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+      line-height: $line-height-normal;
+      margin-bottom: $spacing-md;
+    }
+
+    .tierPricing {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-top: $spacing-md;
+      border-top: 1px solid $color-divider;
+
+      .rateLabel {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+      }
+
+      .rateValue {
+        font-size: $font-size-xxl;
+        font-weight: $font-weight-bold;
+        color: $color-price;
+      }
+
+      .rateUnit {
+        font-size: $font-size-sm;
+        color: $color-text-tertiary;
+      }
+    }
+  }
+
+  .cardActions {
+    display: flex;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1px solid $color-divider;
+
+    .actionBtn {
+      flex: 1;
+      height: $button-height-sm;
+      border-radius: $radius-button;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      transition: all $transition-fast;
+
+      @include button-reset;
+
+      &.edit {
+        background: rgba($color-info, 0.1);
+        color: $color-info;
+      }
+
+      &.toggle {
+        background: rgba($color-text-tertiary, 0.1);
+        color: $color-text-secondary;
+      }
+
+      &.delete {
+        background: rgba($color-error, 0.1);
+        color: $color-error;
+      }
+
+      &:active {
+        transform: scale(0.96);
+      }
+    }
+  }
+}
+
+.currentTierIndicator {
+  position: absolute;
+  top: -12rpx;
+  right: $spacing-lg;
+  padding: $spacing-xs $spacing-md;
+  background: $color-primary;
+  color: $color-text-white;
+  font-size: $font-size-xs;
+  border-radius: $radius-round;
+}
+
+.warningBanner {
+  background: linear-gradient(135deg, rgba($color-warning, 0.15), rgba($color-warning, 0.05));
+  border: 1px solid rgba($color-warning, 0.3);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  .warningIcon {
+    font-size: $font-size-lg;
+    margin-right: $spacing-sm;
+  }
+
+  .warningText {
+    font-size: $font-size-sm;
+    color: $color-warning;
+    line-height: $line-height-normal;
+  }
+}

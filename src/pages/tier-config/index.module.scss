@@ -1,0 +1,332 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
+  padding-bottom: 160rpx;
+
+  .header {
+    padding: $spacing-lg $page-padding;
+    background: $color-bg-card;
+
+    .title {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    .subtitle {
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .validationBanner {
+    margin: $spacing-md $page-padding;
+    padding: $spacing-md $spacing-lg;
+    background: rgba($color-error, 0.1);
+    border-radius: $radius-lg;
+    border: 1rpx solid rgba($color-error, 0.3);
+
+    .bannerText {
+      font-size: $font-size-sm;
+      color: $color-error;
+      line-height: $line-height-normal;
+    }
+  }
+
+  .tierList {
+    padding: $spacing-md $page-padding;
+
+    .tierCard {
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-lg;
+      margin-bottom: $spacing-md;
+      box-shadow: $shadow-card;
+      position: relative;
+      overflow: hidden;
+
+      &.disabled {
+        opacity: 0.5;
+      }
+
+      .tierHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: $spacing-md;
+
+        .tierOrder {
+          width: 56rpx;
+          height: 56rpx;
+          border-radius: 50%;
+          background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: $font-size-md;
+          font-weight: $font-weight-bold;
+          color: $color-text-white;
+        }
+
+        .tierActions {
+          display: flex;
+          gap: $spacing-sm;
+
+          .actionIcon {
+            width: 56rpx;
+            height: 56rpx;
+            border-radius: 50%;
+            background: $color-bg-secondary;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: $font-size-md;
+
+            @include button-reset;
+
+            &:active {
+              transform: scale(0.9);
+            }
+
+            &.delete {
+              background: rgba($color-error, 0.1);
+              color: $color-error;
+            }
+          }
+        }
+      }
+
+      .formRow {
+        margin-bottom: $spacing-md;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .rowLabel {
+          font-size: $font-size-xs;
+          color: $color-text-tertiary;
+          margin-bottom: $spacing-xs;
+        }
+
+        .inputRow {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          .input {
+            flex: 1;
+            height: $button-height-md;
+            padding: 0 $spacing-md;
+            background: $color-bg-secondary;
+            border-radius: $radius-md;
+            border: 2rpx solid transparent;
+            font-size: $font-size-sm;
+            color: $color-text-primary;
+
+            &:focus {
+              border-color: $color-primary;
+            }
+
+            &.error {
+              border-color: $color-error;
+            }
+          }
+
+          .unit {
+            font-size: $font-size-sm;
+            color: $color-text-tertiary;
+            min-width: 60rpx;
+          }
+        }
+
+        .rangeInput {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+
+          .input {
+            flex: 1;
+          }
+
+          .rangeSeparator {
+            font-size: $font-size-sm;
+            color: $color-text-tertiary;
+            padding: 0 $spacing-xs;
+          }
+        }
+
+        .toggleRow {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          .toggleLabel {
+            font-size: $font-size-sm;
+            color: $color-text-secondary;
+          }
+
+          .switch {
+            width: 100rpx;
+            height: 56rpx;
+            border-radius: 28rpx;
+            background: $color-bg-secondary;
+            position: relative;
+            transition: all $transition-fast;
+
+            @include button-reset;
+
+            &.active {
+              background: $color-primary;
+
+              &::after {
+                transform: translateX(44rpx);
+              }
+            }
+
+            &::after {
+              content: '';
+              position: absolute;
+              top: 4rpx;
+              left: 4rpx;
+              width: 48rpx;
+              height: 48rpx;
+              border-radius: 50%;
+              background: $color-text-white;
+              box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+              transition: all $transition-fast;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .addTierSection {
+    padding: $spacing-md $page-padding;
+
+    .addBtn {
+      width: 100%;
+      height: $button-height-lg;
+      border-radius: $radius-lg;
+      background: rgba($color-primary, 0.1);
+      border: 2rpx dashed $color-primary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: $spacing-sm;
+      font-size: $font-size-md;
+      color: $color-primary-light;
+      font-weight: $font-weight-medium;
+
+      @include button-reset;
+
+      &:active {
+        transform: scale(0.98);
+        background: rgba($color-primary, 0.2);
+      }
+
+      .plusIcon {
+        font-size: $font-size-xl;
+      }
+    }
+  }
+
+  .pricePreview {
+    margin: $spacing-md $page-padding;
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    padding: $spacing-lg;
+    box-shadow: $shadow-card;
+
+    .previewTitle {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-md;
+    }
+
+    .exampleRow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: $spacing-sm 0;
+      border-bottom: 1rpx dashed $color-divider;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .hours {
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+      }
+
+      .price {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-price;
+      }
+    }
+  }
+
+  .actionBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: $spacing-md $page-padding;
+    padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+    background: $color-bg-card;
+    border-top: 1rpx solid $color-divider;
+    display: flex;
+    gap: $spacing-md;
+
+    .btn {
+      flex: 1;
+      height: $button-height-lg;
+      border-radius: $radius-button;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-md;
+      font-weight: $font-weight-medium;
+      transition: all $transition-base;
+
+      @include button-reset;
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      &.secondary {
+        background: $color-bg-secondary;
+        color: $color-text-primary;
+      }
+
+      &.primary {
+        background: $color-primary;
+        color: $color-text-white;
+      }
+    }
+  }
+
+  .emptyState {
+    padding: $spacing-xl * 2;
+    text-align: center;
+
+    .emptyIcon {
+      font-size: 96rpx;
+      opacity: 0.3;
+      margin-bottom: $spacing-md;
+    }
+
+    .emptyText {
+      font-size: $font-size-md;
+      color: $color-text-tertiary;
+    }
+  }
+}

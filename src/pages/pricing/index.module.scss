@@ -1,0 +1,205 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
+  padding-bottom: 120rpx;
+
+  .pageHeader {
+    padding: $spacing-lg $page-padding;
+    background: transparent;
+
+    .headerTitle {
+      font-size: $font-size-xxl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin-bottom: $spacing-xs;
+    }
+
+    .headerSubtitle {
+      font-size: $font-size-sm;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .quickStats {
+    display: flex;
+    gap: $spacing-md;
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-lg;
+
+    .statCard {
+      flex: 1;
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-md;
+      box-shadow: $shadow-card;
+
+      .statValue {
+        font-size: $font-size-xxl;
+        font-weight: $font-weight-bold;
+        color: $color-price;
+        margin-bottom: $spacing-xs;
+      }
+
+      .statLabel {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+      }
+
+      &.highlight {
+        background: linear-gradient(135deg, rgba($color-primary, 0.15), rgba($color-primary-light, 0.05));
+        border: 1px solid rgba($color-primary, 0.3);
+
+        .statValue {
+          color: $color-primary-light;
+        }
+      }
+    }
+  }
+
+  .sectionTitle {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .actionLink {
+      font-size: $font-size-sm;
+      color: $color-primary-light;
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  .tierList {
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-lg;
+  }
+
+  .pricingRules {
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-lg;
+
+    .rulesCard {
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-lg;
+      box-shadow: $shadow-card;
+
+      .rulesTitle {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-md;
+      }
+
+      .ruleItem {
+        display: flex;
+        align-items: flex-start;
+        gap: $spacing-sm;
+        margin-bottom: $spacing-md;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .ruleIcon {
+          width: 48rpx;
+          height: 48rpx;
+          border-radius: 50%;
+          background: rgba($color-primary, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: $font-size-md;
+          flex-shrink: 0;
+        }
+
+        .ruleContent {
+          flex: 1;
+
+          .ruleTitle {
+            font-size: $font-size-sm;
+            font-weight: $font-weight-medium;
+            color: $color-text-primary;
+            margin-bottom: $spacing-xs;
+          }
+
+          .ruleDesc {
+            font-size: $font-size-xs;
+            color: $color-text-tertiary;
+            line-height: $line-height-normal;
+          }
+        }
+      }
+    }
+  }
+
+  .exampleSection {
+    padding: 0 $page-padding;
+    margin-bottom: $spacing-lg;
+
+    .exampleCard {
+      background: $color-bg-card;
+      border-radius: $radius-lg;
+      padding: $spacing-lg;
+      box-shadow: $shadow-card;
+
+      .exampleTitle {
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: $spacing-md;
+      }
+
+      .exampleItem {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $spacing-md 0;
+        border-bottom: 1px dashed $color-divider;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .exampleHours {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+        }
+
+        .examplePrice {
+          font-size: $font-size-md;
+          font-weight: $font-weight-semibold;
+          color: $color-price;
+        }
+
+        .exampleBreakdown {
+          font-size: $font-size-xs;
+          color: $color-text-tertiary;
+          margin-top: $spacing-xs;
+        }
+      }
+    }
+  }
+
+  .emptyState {
+    padding: $spacing-xl * 2;
+    text-align: center;
+
+    .emptyIcon {
+      font-size: 120rpx;
+      opacity: 0.3;
+      margin-bottom: $spacing-md;
+    }
+
+    .emptyText {
+      font-size: $font-size-md;
+      color: $color-text-tertiary;
+    }
+  }
+}
