@@ -40,11 +40,15 @@ const RevenueDashboardPage: React.FC = () => {
     if (type === 'station') params.stationId = id
     if (type === 'photographer') params.photographerId = id
     if (type === 'member') params.memberLevel = id as MemberLevel
-    params.startDate = `${selectedMonth}-01`
-    params.endDate = `${selectedMonth}-31`
+    if (type === 'daily') {
+      params.date = id
+    } else {
+      params.startDate = `${selectedMonth}-01`
+      params.endDate = `${selectedMonth}-31`
+    }
 
     const queryStr = Object.entries(params)
-      .map(([k, v]) => `${k}=${v}`)
+      .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
       .join('&')
 
     Taro.navigateTo({

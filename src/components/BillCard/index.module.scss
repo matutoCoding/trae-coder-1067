@@ -127,34 +127,68 @@
       }
     }
 
-    .refundInfo {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
+    .paidInfo {
       margin-top: $spacing-sm;
-      padding-top: $spacing-sm;
+      padding: $spacing-sm;
+      background: rgba($color-success, 0.06);
+      border-radius: $radius-sm;
 
-      .refundLabel {
+      .incomeRow {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: $spacing-xs;
+
+        &:not(:last-child) {
+          margin-bottom: $spacing-xs;
+        }
+      }
+
+      .paidLabel,
+      .refundLabel,
+      .netLabel {
         font-size: $font-size-xs;
         color: $color-text-tertiary;
+      }
+
+      .netLabel {
+        margin-right: auto;
+      }
+
+      .paidValue {
+        font-size: $font-size-sm;
+        color: $color-success;
+        font-weight: $font-weight-semibold;
       }
 
       .refundValue {
         font-size: $font-size-sm;
         color: #F5222D;
-        font-weight: $font-weight-medium;
+        font-weight: $font-weight-semibold;
       }
 
-      .remainingLabel {
+      .netValue {
+        font-size: $font-size-md;
+        color: $color-price;
+        font-weight: $font-weight-bold;
+      }
+
+      .refundableText {
+        font-size: $font-size-xs;
+        color: $color-primary;
+        margin-left: auto;
+      }
+    }
+
+    .cancelInfo {
+      margin-top: $spacing-sm;
+      padding: $spacing-sm $spacing-md;
+      background: rgba($color-text-tertiary, 0.1);
+      border-radius: $radius-sm;
+
+      .cancelText {
         font-size: $font-size-xs;
         color: $color-text-tertiary;
-        margin-left: $spacing-sm;
-      }
-
-      .remainingValue {
-        font-size: $font-size-sm;
-        color: $color-text-primary;
-        font-weight: $font-weight-semibold;
       }
     }
   }

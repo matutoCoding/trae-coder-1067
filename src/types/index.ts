@@ -75,6 +75,9 @@ export interface BillOperationLog {
   operator: string
   amount: number
   changeAmount: number
+  paidAmount: number
+  refundAmount: number
+  balance: number
   previousStatus: BillStatus
   newStatus: BillStatus
   notes?: string
@@ -100,6 +103,7 @@ export interface Bill {
   discountAmount: number
   discountRate: number
   refundAmount: number
+  paidAmount: number
   total: number
   status: BillStatus
   filmRecords: FilmRecord[]

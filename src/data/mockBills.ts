@@ -6,16 +6,22 @@ const createOperationLog = (
   operation: BillOperationLog['operation'],
   amount: number,
   changeAmount: number,
+  paidAmount: number,
+  refundAmount: number,
+  balance: number,
   previousStatus: Bill['status'],
   newStatus: Bill['status'],
   notes?: string
 ): BillOperationLog => ({
-  id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+  id: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${Math.random().toString(36).substr(2, 4)}`,
   billId,
   operation,
   operator: '系统',
   amount,
   changeAmount,
+  paidAmount,
+  refundAmount,
+  balance,
   previousStatus,
   newStatus,
   notes,
@@ -44,6 +50,7 @@ export const mockBills: Bill[] = [
     discountAmount: 0,
     discountRate: 0,
     refundAmount: 0,
+    paidAmount: 296,
     total: 296,
     status: 'paid',
     filmRecords: [
@@ -59,8 +66,8 @@ export const mockBills: Bill[] = [
       }
     ],
     operationLogs: [
-      createOperationLog('BL-001', 'create', 296, 296, 'unpaid', 'unpaid', '账单创建'),
-      createOperationLog('BL-001', 'pay', 296, 296, 'unpaid', 'paid', '前台收款')
+      createOperationLog('BL-001', 'create', 296, 296, 0, 0, 296, 'unpaid', 'unpaid', '账单创建'),
+      createOperationLog('BL-001', 'pay', 296, -296, 296, 0, 0, 'unpaid', 'paid', '前台收款')
     ],
     notes: '金卡会员，10%折扣',
     createdAt: dayjs().subtract(1, 'day').toISOString(),
@@ -88,6 +95,7 @@ export const mockBills: Bill[] = [
     discountAmount: 12,
     discountRate: 0.05,
     refundAmount: 0,
+    paidAmount: 0,
     total: 342,
     status: 'unpaid',
     filmRecords: [
@@ -102,7 +110,7 @@ export const mockBills: Bill[] = [
       }
     ],
     operationLogs: [
-      createOperationLog('BL-002', 'create', 342, 342, 'unpaid', 'unpaid', '账单创建')
+      createOperationLog('BL-002', 'create', 342, 342, 0, 0, 342, 'unpaid', 'unpaid', '账单创建')
     ],
     createdAt: dayjs().toISOString()
   },
@@ -127,6 +135,7 @@ export const mockBills: Bill[] = [
     discountAmount: 0,
     discountRate: 0,
     refundAmount: 0,
+    paidAmount: 0,
     total: 332,
     status: 'unpaid',
     filmRecords: [
@@ -142,7 +151,7 @@ export const mockBills: Bill[] = [
       }
     ],
     operationLogs: [
-      createOperationLog('BL-003', 'create', 332, 332, 'unpaid', 'unpaid', '账单创建')
+      createOperationLog('BL-003', 'create', 332, 332, 0, 0, 332, 'unpaid', 'unpaid', '账单创建')
     ],
     createdAt: dayjs().toISOString()
   },
@@ -168,11 +177,12 @@ export const mockBills: Bill[] = [
     discountAmount: 0,
     discountRate: 0,
     refundAmount: 0,
+    paidAmount: 0,
     total: 175.5,
     status: 'unpaid',
     filmRecords: [],
     operationLogs: [
-      createOperationLog('BL-004', 'create', 175.5, 175.5, 'unpaid', 'unpaid', '账单创建')
+      createOperationLog('BL-004', 'create', 175.5, 175.5, 0, 0, 175.5, 'unpaid', 'unpaid', '账单创建')
     ],
     createdAt: dayjs().toISOString()
   },
@@ -198,6 +208,7 @@ export const mockBills: Bill[] = [
     discountAmount: 0,
     discountRate: 0,
     refundAmount: 0,
+    paidAmount: 0,
     total: 551,
     status: 'unpaid',
     filmRecords: [
@@ -213,7 +224,7 @@ export const mockBills: Bill[] = [
       }
     ],
     operationLogs: [
-      createOperationLog('BL-005', 'create', 551, 551, 'unpaid', 'unpaid', '账单创建')
+      createOperationLog('BL-005', 'create', 551, 551, 0, 0, 551, 'unpaid', 'unpaid', '账单创建')
     ],
     createdAt: dayjs().toISOString()
   },
@@ -238,13 +249,14 @@ export const mockBills: Bill[] = [
     discountAmount: 0,
     discountRate: 0,
     refundAmount: 60,
-    total: 60,
+    paidAmount: 120,
+    total: 120,
     status: 'refunded',
     filmRecords: [],
     operationLogs: [
-      createOperationLog('BL-006', 'create', 120, 120, 'unpaid', 'unpaid', '账单创建'),
-      createOperationLog('BL-006', 'pay', 120, 120, 'unpaid', 'paid', '客户扫码支付'),
-      createOperationLog('BL-006', 'partial_refund', 60, -60, 'paid', 'refunded', '客户提前离开，部分退款')
+      createOperationLog('BL-006', 'create', 120, 120, 0, 0, 120, 'unpaid', 'unpaid', '账单创建'),
+      createOperationLog('BL-006', 'pay', 120, -120, 120, 0, 0, 'unpaid', 'paid', '客户扫码支付¥120，应收清零'),
+      createOperationLog('BL-006', 'partial_refund', 60, -60, 120, 60, 60, 'paid', 'refunded', '客户提前离开，退款¥60，累计实收¥60，可退余额¥60')
     ],
     createdAt: dayjs().subtract(2, 'day').toISOString()
   },
@@ -267,6 +279,7 @@ export const mockBills: Bill[] = [
     discountAmount: 0,
     discountRate: 0,
     refundAmount: 0,
+    paidAmount: 502,
     total: 502,
     status: 'paid',
     filmRecords: [
@@ -281,8 +294,8 @@ export const mockBills: Bill[] = [
       }
     ],
     operationLogs: [
-      createOperationLog('BL-007', 'create', 502, 502, 'unpaid', 'unpaid', '账单创建'),
-      createOperationLog('BL-007', 'pay', 502, 502, 'unpaid', 'paid', '银卡会员，5%折扣')
+      createOperationLog('BL-007', 'create', 502, 502, 0, 0, 502, 'unpaid', 'unpaid', '账单创建'),
+      createOperationLog('BL-007', 'pay', 502, -502, 502, 0, 0, 'unpaid', 'paid', '银卡会员，5%折扣')
     ],
     createdAt: dayjs().subtract(3, 'day').toISOString(),
     paidAt: dayjs().subtract(3, 'day').toISOString()

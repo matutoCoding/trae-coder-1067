@@ -22,6 +22,27 @@
   .emptyText {
     font-size: $font-size-md;
     color: $color-text-tertiary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .emptyHint {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    margin-bottom: $spacing-lg;
+  }
+
+  .backBtn {
+    padding: 0 $spacing-xl;
+    background: $color-primary;
+    color: $color-text-white;
+    border-radius: $radius-button;
+    height: $button-height;
+    line-height: $button-height;
+    font-size: $font-size-md;
+
+    &::after {
+      border: none;
+    }
   }
 }
 
@@ -218,6 +239,13 @@
     }
   }
 
+  .paidRow {
+    .paidValue {
+      color: $color-success;
+      font-weight: $font-weight-medium;
+    }
+  }
+
   .feeDivider {
     height: 1rpx;
     background: $color-divider;
@@ -368,6 +396,21 @@
     &.negative {
       color: #F5222D;
     }
+
+    &.refundTxt {
+      color: #FFAB00;
+    }
+
+    &.neutral {
+      color: $color-text-secondary;
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  .statsLine {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    margin-bottom: $spacing-xs;
   }
 
   .balanceAfter {
@@ -536,6 +579,13 @@
     border-radius: $radius-md;
     font-size: $font-size-md;
     color: $color-text-primary;
+  }
+
+  .hintText {
+    margin-top: $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    line-height: 1.5;
   }
 }
 

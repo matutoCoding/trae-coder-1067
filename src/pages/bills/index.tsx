@@ -36,6 +36,7 @@ const BillsPage: React.FC = () => {
   const [filterMemberLevel, setFilterMemberLevel] = useState<MemberLevel | ''>('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
 
   useDidShow(() => {
     if (router.params) {
@@ -47,6 +48,11 @@ const BillsPage: React.FC = () => {
       if (router.params.memberLevel) setFilterMemberLevel(router.params.memberLevel as MemberLevel)
       if (router.params.startDate) setStartDate(router.params.startDate)
       if (router.params.endDate) setEndDate(router.params.endDate)
+      if (router.params.date) {
+        setDateFilter(router.params.date)
+        setStartDate(router.params.date)
+        setEndDate(router.params.date)
+      }
     }
   })
 
@@ -95,34 +101,59 @@ const BillsPage: React.FC = () => {
     cancelled: bills.filter(b => b.status === 'cancelled').length
   }), [bills])
 
+  const filteredTotal = useMemo(() => {
+    return filteredBills.reduce((sum, b) =>
+      sum + Math.max(0, (b.paidAmount || 0) - (b.refundAmount || 0)), 0
+    )
+  }, [filteredBills])
+
   const handleCardClick = (bill: Bill) => {
+    const param = bill.billNo
+      ? `billNo=${encodeURIComponent(bill.billNo)}`
+      : `id=${bill.id}`
     Taro.navigateTo({
-      url: `/pages/bill-detail/index?id=${bill.id}`
+      url: `/pages/bill-detail/index?${param}`
     })
   }
 
   const handleSettle = (bill: Bill) => {
+    const maxAmount = bill.total
     Taro.showModal({
       title: '确认收款',
-      content: `确认收到 ${formatCurrency(bill.total)} 吗？`,
+      editable: true,
+      placeholderText: `应收 ${formatCurrency(maxAmount)}，实际收到：`,
       confirmText: '确认收款',
       confirmColor: '#6C5CE7',
       success: (res) => {
-        if (res.confirm) {
-          const success = payBill(bill.id)
-          if (success) {
-            Taro.showToast({ title: '收款成功', icon: 'success' })
-          } else {
-            Taro.showToast({ title: '收款失败', icon: 'none' })
-          }
+        if (!res.confirm) return
+        const inputAmount = parseFloat(res.content || String(maxAmount))
+        const payAmount = isNaN(inputAmount) ? maxAmount : Math.min(maxAmount, Math.max(0, inputAmount))
+        if (payAmount <= 0) {
+          Taro.showToast({ title: '收款金额必须大于0', icon: 'none' })
+          return
+        }
+        const notes = payAmount !== maxAmount
+          ? `部分收款：应收 ${formatCurrency(maxAmount)}，实收 ${formatCurrency(payAmount)}`
+          : undefined
+        const success = payBill(bill.id, payAmount, notes)
+        if (success) {
+          Taro.showToast({
+            title: notes ? `已收${formatCurrency(payAmount)}` : '收款成功',
+            icon: 'success'
+          })
+        } else {
+          Taro.showToast({ title: '收款失败', icon: 'none' })
         }
       }
     })
   }
 
   const handleAddFilm = (bill: Bill) => {
+    const param = bill.billNo
+      ? `billNo=${encodeURIComponent(bill.billNo)}`
+      : `id=${bill.id}`
     Taro.navigateTo({
-      url: `/pages/film-register/index?billId=${bill.id}`
+      url: `/pages/film-register/index?${param}`
     })
   }
 
@@ -134,6 +165,7 @@ const BillsPage: React.FC = () => {
     setFilterMemberLevel('')
     setStartDate('')
     setEndDate('')
+    setDateFilter('')
   }
 
   const memberLevelOptions = [
@@ -184,6 +216,18 @@ const BillsPage: React.FC = () => {
           {showFilter ? '收起' : '筛选'}
         </Text>
       </View>
+
+      {dateFilter && (
+        <View className={styles.dateFilterBar}>
+          <Text className={styles.dateFilterText}>📅 {dateFilter} 当日明细</Text>
+          <Text className={styles.dateFilterTotal}>实收合计：{formatCurrency(filteredTotal)}</Text>
+          <Text className={styles.clearFilterBtn} onClick={() => {
+            setDateFilter('')
+            setStartDate('')
+            setEndDate('')
+          }}>清除</Text>
+        </View>
+      )}
 
       {showFilter && (
         <View className={styles.filterPanel}>
@@ -262,7 +306,7 @@ const BillsPage: React.FC = () => {
       </View>
 
       <View className={styles.listFooter}>
-        <Text className={styles.footerText}>共 {filteredBills.length} 条记录</Text>
+        <Text className={styles.footerText}>共 {filteredBills.length} 条记录 · 实收合计 {formatCurrency(filteredTotal)}</Text>
       </View>
     </ScrollView>
   )

@@ -22,6 +22,27 @@
   .emptyText {
     font-size: $font-size-md;
     color: $color-text-tertiary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .emptyHint {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    margin-bottom: $spacing-lg;
+  }
+
+  .backBtn {
+    padding: 0 $spacing-xl;
+    background: $color-primary;
+    color: $color-text-white;
+    border-radius: $radius-button;
+    height: $button-height;
+    line-height: $button-height;
+    font-size: $font-size-md;
+
+    &::after {
+      border: none;
+    }
   }
 }
 
@@ -89,6 +110,18 @@
     font-size: $font-size-lg;
     font-weight: $font-weight-bold;
     color: $color-price;
+  }
+
+  .infoValuePaid {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-success;
+  }
+
+  .infoValueRefund {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: #F5222D;
   }
 }
 

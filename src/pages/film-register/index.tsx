@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView, Input, Textarea, Button, Picker } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import styles from './index.module.scss'
@@ -10,15 +10,17 @@ import { calculateFilmPrice, formatCurrency } from '@/utils/pricing'
 
 const FilmRegisterPage: React.FC = () => {
   const router = useRouter()
-  const billId = router.params.billId as string
-  const bills = useBillsStore(state => state.bills)
+  const billId = router.params.id as string
+  const billNo = router.params.billNo as string
+  const billRef = billId || billNo || ''
+  const findBill = useBillsStore(state => state.findBill)
   const addFilmRecord = useBillsStore(state => state.addFilmRecord)
   const removeFilmRecord = useBillsStore(state => state.removeFilmRecord)
 
   const bill = useMemo(() => {
-    if (!billId) return null
-    return bills.find(b => b.id === billId) || null
-  }, [billId, bills])
+    if (!billRef) return null
+    return findBill(billRef) || null
+  }, [billRef, findBill])
 
   const [filmType, setFilmType] = useState<string>(filmTypes[0].value)
   const [format, setFormat] = useState<FilmFormat | string>('135')
@@ -27,17 +29,17 @@ const FilmRegisterPage: React.FC = () => {
   const [notes, setNotes] = useState<string>('')
 
   const filmTypeIndex = useMemo(() =>
-    filmTypes.findIndex(f => f.value === filmType),
+    filmTypes.findIndex(f => f.value === filmType) ?? 0,
     [filmType]
   )
 
   const processTypeIndex = useMemo(() =>
-    processTypes.findIndex(p => p.value === processType),
+    processTypes.findIndex(p => p.value === processType) ?? 0,
     [processType]
   )
 
   const formatIndex = useMemo(() =>
-    formatOptions.findIndex(f => f.value === format),
+    formatOptions.findIndex(f => f.value === format) ?? 0,
     [format]
   )
 
@@ -93,7 +95,9 @@ const FilmRegisterPage: React.FC = () => {
     return (
       <View className={styles.emptyState}>
         <Text className={styles.emptyIcon}>🎞️</Text>
-        <Text className={styles.emptyText}>请先选择要添加胶片的账单</Text>
+        <Text className={styles.emptyText}>找不到对应的账单</Text>
+        <Text className={styles.emptyHint}>请检查账单号 {billRef} 是否正确</Text>
+        <Button className={styles.backBtn} onClick={() => Taro.navigateBack()}>返回</Button>
       </View>
     )
   }
@@ -115,9 +119,29 @@ const FilmRegisterPage: React.FC = () => {
             <Text className={styles.infoValue}>{bill.photographerName}</Text>
           </View>
           <View className={styles.infoRow}>
-            <Text className={styles.infoLabel}>当前总金额</Text>
+            <Text className={styles.infoLabel}>账单状态</Text>
+            <Text className={styles.infoValue}>{bill.date}</Text>
+          </View>
+          <View className={styles.infoRow}>
+            <Text className={styles.infoLabel}>应收金额</Text>
             <Text className={styles.infoValueHighlight}>{formatCurrency(bill.total)}</Text>
           </View>
+          {(bill.paidAmount || 0) > 0 && (
+            <View className={styles.infoRow}>
+              <Text className={styles.infoLabel}>实收金额</Text>
+              <Text className={styles.infoValuePaid}>
+                {formatCurrency(bill.paidAmount || 0)}
+              </Text>
+            </View>
+          )}
+          {(bill.refundAmount || 0) > 0 && (
+            <View className={styles.infoRow}>
+              <Text className={styles.infoLabel}>已退款</Text>
+              <Text className={styles.infoValueRefund}>
+                {formatCurrency(bill.refundAmount || 0)}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -147,14 +171,14 @@ const FilmRegisterPage: React.FC = () => {
             <View className={styles.formatGrid}>
               {formatOptions.map(fmt => (
                 <View
-                  key={fmt.value}
-                  className={classnames(styles.formatItem, format === fmt.value && styles.active)}
-                  onClick={() => setFormat(fmt.value)}
-                >
-                  <Text className={styles.formatLabel}>{fmt.label}</Text>
-                  <Text className={styles.formatMultiplier}>×{fmt.multiplier}</Text>
-                </View>
-              ))}
+                key={fmt.value}
+                className={classnames(styles.formatItem, format === fmt.value && styles.active)}
+                onClick={() => setFormat(fmt.value)}
+              >
+                <Text className={styles.formatLabel}>{fmt.label}</Text>
+                <Text className={styles.formatMultiplier}>×{fmt.multiplier}</Text>
+              </View>
+            ))}
             </View>
           </View>
 
@@ -258,12 +282,14 @@ const FilmRegisterPage: React.FC = () => {
                 </View>
                 <View className={styles.filmActions}>
                   <Text className={styles.filmPrice}>{formatCurrency(record.price)}</Text>
-                  <Text
-                    className={styles.deleteBtn}
-                    onClick={() => handleDeleteFilm(record.id)}
-                  >
-                    删除
-                  </Text>
+                  {bill.status !== 'refunded' && bill.status !== 'cancelled' && (
+                    <Text
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeleteFilm(record.id)}
+                    >
+                      删除
+                    </Text>
+                  )}
                 </View>
               </View>
             ))}

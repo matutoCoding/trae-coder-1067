@@ -29,7 +29,12 @@ const BillCard: React.FC<BillCardProps> = ({
   onAddFilm,
   showActions = true
 }) => {
-  const remainingAmount = bill.total - (bill.refundAmount || 0)
+  const paidAmount = bill.paidAmount || 0
+  const refundAmount = bill.refundAmount || 0
+  const netIncome = Math.max(0, paidAmount - refundAmount)
+  const refundable = paidAmount - refundAmount
+
+  const isUnpaidCancelled = bill.status === 'cancelled' && paidAmount === 0
 
   return (
     <View className={styles.billCard} onClick={onClick}>
@@ -48,7 +53,7 @@ const BillCard: React.FC<BillCardProps> = ({
           className={classnames(styles.statusBadge, statusStyleMap[bill.status])}
           style={{ borderColor: getBillStatusColor(bill.status), color: getBillStatusColor(bill.status) }}
         >
-          {getBillStatusLabel(bill.status)}
+          {isUnpaidCancelled ? '已取消' : getBillStatusLabel(bill.status)}
         </Text>
       </View>
 
@@ -75,18 +80,37 @@ const BillCard: React.FC<BillCardProps> = ({
         )}
 
         <View className={styles.billTotal}>
-          <Text className={styles.totalLabel}>
-            {bill.status === 'unpaid' ? '应付金额' : '账单金额'}
-          </Text>
+          <Text className={styles.totalLabel}>应收金额</Text>
           <Text className={styles.totalValue}>{formatCurrency(bill.total)}</Text>
         </View>
 
-        {bill.refundAmount > 0 && (
-          <View className={styles.refundInfo}>
-            <Text className={styles.refundLabel}>已退</Text>
-            <Text className={styles.refundValue}>-{formatCurrency(bill.refundAmount)}</Text>
-            <Text className={styles.remainingLabel}>剩余</Text>
-            <Text className={styles.remainingValue}>{formatCurrency(remainingAmount)}</Text>
+        {bill.status !== 'unpaid' && !isUnpaidCancelled && (
+          <View className={styles.paidInfo}>
+            <View className={styles.incomeRow}>
+              <Text className={styles.paidLabel}>实收</Text>
+              <Text className={styles.paidValue}>{formatCurrency(paidAmount)}</Text>
+              {refundAmount > 0 && (
+                <>
+                  <Text className={styles.refundLabel}>已退</Text>
+                  <Text className={styles.refundValue}>-{formatCurrency(refundAmount)}</Text>
+                </>
+              )}
+            </View>
+            <View className={styles.incomeRow}>
+              <Text className={styles.netLabel}>净收入</Text>
+              <Text className={styles.netValue}>{formatCurrency(netIncome)}</Text>
+              {bill.status === 'paid' && refundAmount > 0 && (
+                <Text className={styles.refundableText}>
+                  剩余可退 {formatCurrency(refundable)}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {isUnpaidCancelled && (
+          <View className={styles.cancelInfo}>
+            <Text className={styles.cancelText}>未产生任何实际收款，已释放工位</Text>
           </View>
         )}
       </View>
@@ -107,7 +131,7 @@ const BillCard: React.FC<BillCardProps> = ({
               结算
             </Button>
           )}
-          {bill.status !== 'cancelled' && bill.status !== 'refunded' && (
+          {!isUnpaidCancelled && bill.status !== 'cancelled' && bill.status !== 'refunded' && (
             <Button
               className={classnames(styles.actionBtn, styles.film)}
               onClick={(e) => { e.stopPropagation(); onAddFilm?.(); }}

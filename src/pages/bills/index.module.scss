@@ -180,6 +180,39 @@
   }
 }
 
+.dateFilterBar {
+  display: flex;
+  align-items: center;
+  margin: 0 $page-padding $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: rgba($color-primary, 0.1);
+  border-radius: $radius-md;
+  gap: $spacing-md;
+
+  .dateFilterText {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-primary;
+    flex-shrink: 0;
+  }
+
+  .dateFilterTotal {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-bold;
+    color: $color-price;
+    flex: 1;
+  }
+
+  .clearFilterBtn {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    padding: $spacing-xs $spacing-sm;
+    border: 1rpx solid $color-divider;
+    border-radius: $radius-sm;
+    flex-shrink: 0;
+  }
+}
+
 .tabBar {
   display: flex;
   padding: 0 $page-padding $spacing-md;

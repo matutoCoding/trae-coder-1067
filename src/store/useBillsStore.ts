@@ -28,6 +28,9 @@ const createOpLog = (
   operation: BillOperationLog['operation'],
   amount: number,
   changeAmount: number,
+  paidAmount: number,
+  refundAmount: number,
+  balance: number,
   previousStatus: BillStatus,
   newStatus: BillStatus,
   notes?: string,
@@ -39,6 +42,9 @@ const createOpLog = (
   operator,
   amount,
   changeAmount,
+  paidAmount,
+  refundAmount,
+  balance,
   previousStatus,
   newStatus,
   notes,
@@ -50,6 +56,8 @@ interface BillsState {
   currentBill: Bill | null
   setCurrentBill: (bill: Bill | null) => void
   getBillById: (id: string) => Bill | undefined
+  getBillByBillNo: (billNo: string) => Bill | undefined
+  findBill: (idOrBillNo: string) => Bill | undefined
   generateBill: (
     booking: Booking,
     stationName: string,
@@ -73,6 +81,7 @@ interface BillsState {
     memberLevel?: MemberLevel
     startDate?: string
     endDate?: string
+    date?: string
   }) => Bill[]
   getTotalRevenue: () => number
   getUnpaidAmount: () => number
@@ -100,6 +109,14 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
   getBillById: (id) => {
     return get().bills.find(b => b.id === id)
+  },
+
+  getBillByBillNo: (billNo) => {
+    return get().bills.find(b => b.billNo === billNo)
+  },
+
+  findBill: (idOrBillNo) => {
+    return get().bills.find(b => b.id === idOrBillNo || b.billNo === idOrBillNo)
   },
 
   generateBill: (booking, stationName, stationHourlyRate, filmRecords = [], extraDiscountRate = 0) => {
@@ -142,6 +159,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       discountAmount: extraDiscountAmount,
       discountRate: extraDiscountRate,
       refundAmount: 0,
+      paidAmount: 0,
       total,
       status: 'unpaid',
       filmRecords: [...filmRecords],
@@ -149,10 +167,9 @@ export const useBillsStore = create<BillsState>((set, get) => ({
         createOpLog(
           `BL-${Date.now()}`,
           'create',
-          total,
-          total,
-          'unpaid',
-          'unpaid',
+          total, total,
+          0, 0, total,
+          'unpaid', 'unpaid',
           `${getMemberLevelLabel(memberLevel)}，自动生成账单`
         )
       ],
@@ -172,8 +189,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
   },
 
   addFilmRecord: (billId, recordData) => {
-    const { bills } = get()
-    const bill = bills.find(b => b.id === billId)
+    const bill = get().bills.find(b => b.id === billId)
     if (!bill) return false
 
     const price = calculateFilmPrice(
@@ -200,8 +216,14 @@ export const useBillsStore = create<BillsState>((set, get) => ({
         const newTotal = Math.round((totalBeforeExtra - newDiscountAmount) * 100) / 100
         const newOriginalTotal = b.originalTotal + price
 
+        const balance = b.status === 'paid'
+          ? Math.max(0, b.paidAmount - b.refundAmount)
+          : newTotal
+
         const log = createOpLog(
-          billId, 'film_add', newTotal, newTotal - b.total, b.status, b.status,
+          billId, 'film_add', price, (newTotal - b.total),
+          b.paidAmount, b.refundAmount, balance,
+          b.status, b.status,
           `添加胶片: ${newRecord.filmType} ${newRecord.format} × ${newRecord.quantity}，¥${price}`
         )
 
@@ -223,8 +245,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
   },
 
   removeFilmRecord: (billId, recordId) => {
-    const { bills } = get()
-    const bill = bills.find(b => b.id === billId)
+    const bill = get().bills.find(b => b.id === billId)
     const record = bill?.filmRecords.find(r => r.id === recordId)
     if (!record) return false
 
@@ -238,8 +259,14 @@ export const useBillsStore = create<BillsState>((set, get) => ({
         const newTotal = Math.round((totalBeforeExtra - newDiscountAmount) * 100) / 100
         const newOriginalTotal = b.originalTotal - record.price
 
+        const balance = b.status === 'paid'
+          ? Math.max(0, b.paidAmount - b.refundAmount)
+          : newTotal
+
         const log = createOpLog(
-          billId, 'film_remove', newTotal, newTotal - b.total, b.status, b.status,
+          billId, 'film_remove', record.price, (newTotal - b.total),
+          b.paidAmount, b.refundAmount, balance,
+          b.status, b.status,
           `删除胶片: ${record.filmType} × ${record.quantity}，-¥${record.price}`
         )
 
@@ -280,15 +307,27 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const bill = get().bills.find(b => b.id === billId)
     if (!bill || bill.status !== 'unpaid') return false
 
-    const payAmount = amount ?? bill.total
-    const log = createOpLog(billId, 'pay', payAmount, payAmount, 'unpaid', 'paid', notes)
+    const payAmount = typeof amount === 'number' ? amount : bill.total
+    if (payAmount <= 0) return false
 
-    console.log('[BillsStore] 账单收款:', billId, '金额:', payAmount)
+    const newPaidAmount = bill.paidAmount + payAmount
+    const newStatus: BillStatus = 'paid'
+    const balance = Math.max(0, bill.total - payAmount)
+
+    const log = createOpLog(
+      billId, 'pay', payAmount, -payAmount,
+      newPaidAmount, bill.refundAmount, balance,
+      bill.status, newStatus,
+      notes
+    )
+
+    console.log('[BillsStore] 账单收款:', { billId, payAmount, totalBill: bill.total, balance })
 
     set((state) => {
       const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
         ...b,
-        status: 'paid' as BillStatus,
+        status: newStatus,
+        paidAmount: newPaidAmount,
         paidAt: dayjs().toISOString(),
         operationLogs: [...b.operationLogs, log]
       }))
@@ -307,28 +346,29 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     if (!canRefundFromStatuses.includes(bill.status)) return false
 
     const alreadyRefunded = bill.refundAmount || 0
-    const maxRefundable = bill.total - alreadyRefunded
+    const maxRefundable = bill.paidAmount - alreadyRefunded
     if (amount <= 0 || amount > maxRefundable) return false
 
     const operation = isFullRefund ? 'full_refund' as const : 'partial_refund' as const
     const newRefundAmount = alreadyRefunded + amount
-    const isFullyRefundedNow = newRefundAmount >= bill.total
+    const isFullyRefundedNow = newRefundAmount >= bill.paidAmount
     const newStatus: BillStatus = isFullyRefundedNow ? 'refunded' : bill.status
+    const refundBalance = bill.paidAmount - newRefundAmount
+
     const logNotes = isFullRefund
-      ? `全额退款 ¥${amount}`
-      : `部分退款 ¥${amount}（累计已退 ¥${newRefundAmount}）`
+      ? `${notes || '全额退款'} ¥${amount}（累计已退 ¥${newRefundAmount}，实收 ¥${bill.paidAmount - newRefundAmount}）`
+      : `${notes || '部分退款'} ¥${amount}（累计已退 ¥${newRefundAmount}，还可退 ¥${refundBalance}）`
 
     const log = createOpLog(
       billId, operation, amount, -amount,
-      bill.status, newStatus,
-      notes || logNotes
+      bill.paidAmount, newRefundAmount, refundBalance,
+      bill.status, newStatus, logNotes
     )
 
     console.log('[BillsStore] 账单退款:', {
       billId, amount, isFullRefund,
-      previousRefund: alreadyRefunded,
-      newRefundAmount,
-      newStatus
+      alreadyRefunded, newRefundAmount,
+      maxRefundable, newStatus, refundBalance
     })
 
     const { cancelBooking } = useScheduleStore.getState()
@@ -358,20 +398,23 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const { cancelBooking } = useScheduleStore.getState()
 
     if (bill.status === 'unpaid') {
-      const log = createOpLog(billId, 'cancel', 0, -bill.total, bill.status, 'cancelled', notes)
+      const log = createOpLog(
+        billId, 'cancel', 0, -bill.total,
+        bill.paidAmount, bill.refundAmount, 0,
+        bill.status, 'cancelled',
+        `${notes}，释放工位占用，未产生实际收款`
+      )
 
       if (bill.bookingId) {
         cancelBooking(bill.bookingId)
-        console.log('[BillsStore] 取消未支付账单，释放工位:', bill.bookingId)
       }
 
-      console.log('[BillsStore] 取消未支付账单:', billId)
+      console.log('[BillsStore] 取消未支付账单:', billId, '释放工位')
 
       set((state) => {
         const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
           ...b,
           status: 'cancelled' as BillStatus,
-          refundAmount: b.total,
           operationLogs: [...b.operationLogs, log]
         }))
 
@@ -383,28 +426,30 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     if (bill.status === 'paid' || bill.status === 'refunded') {
       const alreadyRefunded = bill.refundAmount || 0
-      const refundRemaining = bill.total - alreadyRefunded
+      const refundRemaining = bill.paidAmount - alreadyRefunded
 
       if (refundRemaining <= 0) return false
 
+      const newRefundAmount = bill.paidAmount
+
       const log = createOpLog(
         billId, 'cancel', refundRemaining, -refundRemaining,
+        bill.paidAmount, newRefundAmount, 0,
         bill.status, 'cancelled',
-        `${notes}，全额退款 ¥${refundRemaining}${alreadyRefunded > 0 ? `（含之前已退 ¥${alreadyRefunded}）` : ''}`
+        `${notes}，取消订单并退还余款 ¥${refundRemaining}${alreadyRefunded > 0 ? `（含之前已退 ¥${alreadyRefunded}）` : ''}，释放工位`
       )
 
       if (bill.bookingId) {
         cancelBooking(bill.bookingId)
-        console.log('[BillsStore] 取消已支付账单，全额退款并释放工位:', bill.bookingId)
       }
 
-      console.log('[BillsStore] 取消已支付账单:', billId, '退款:', refundRemaining)
+      console.log('[BillsStore] 取消已支付账单:', { billId, refundRemaining, alreadyRefunded })
 
       set((state) => {
         const { bills: updatedBills, currentBill: updatedCurrentBill } = updateBillInState(state, billId, b => ({
           ...b,
           status: 'cancelled' as BillStatus,
-          refundAmount: b.total,
+          refundAmount: newRefundAmount,
           operationLogs: [...b.operationLogs, log]
         }))
 
@@ -445,8 +490,14 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     const newOriginalTotal = pricingResult.originalTotal + bill.filmFee
     const change = newTotal - bill.total
 
+    const balance = bill.status === 'paid'
+      ? Math.max(0, bill.paidAmount - bill.refundAmount)
+      : newTotal
+
     const log = createOpLog(
-      billId, 'recalculate', newTotal, change, bill.status, bill.status,
+      billId, 'recalculate', newTotal, change,
+      bill.paidAmount, bill.refundAmount, balance,
+      bill.status, bill.status,
       `重新计价：${change >= 0 ? '+' : ''}¥${Math.abs(change).toFixed(2)}`
     )
 
@@ -487,6 +538,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
     if (filter.stationId) result = result.filter(b => b.stationId === filter.stationId)
     if (filter.photographerId) result = result.filter(b => b.photographerId === filter.photographerId)
     if (filter.memberLevel) result = result.filter(b => b.photographerLevel === filter.memberLevel)
+    if (filter.date) result = result.filter(b => b.date === filter.date)
     if (filter.startDate) result = result.filter(b => b.date >= filter.startDate!)
     if (filter.endDate) result = result.filter(b => b.date <= filter.endDate!)
 
@@ -495,8 +547,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
   getTotalRevenue: () => {
     return get().bills
-      .filter(b => b.status === 'paid')
-      .reduce((sum, b) => sum + b.total - (b.refundAmount || 0), 0)
+      .reduce((sum, b) => sum + Math.max(0, b.paidAmount - b.refundAmount), 0)
   },
 
   getUnpaidAmount: () => {
@@ -519,29 +570,29 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     const monthBills = bills.filter(b => b.date.startsWith(month))
 
-    const dailyStatsMap = new Map<string, { revenue: number; hours: number }>()
+    const calcActualRevenue = (billsArr: Bill[]) =>
+      billsArr.reduce((sum, b) => sum + Math.max(0, b.paidAmount - b.refundAmount), 0)
+
+    const dailyStatsMap = new Map<string, { revenue: number; hours: number; billIds: string[] }>()
 
     monthBills.forEach(bill => {
-      const actualRevenue = bill.status === 'paid'
-        ? bill.total - (bill.refundAmount || 0)
-        : (bill.status === 'unpaid' ? 0 : 0)
+      const actualRevenue = calcActualRevenue([bill])
       const key = bill.date
-      const existing = dailyStatsMap.get(key) || { revenue: 0, hours: 0 }
+      const existing = dailyStatsMap.get(key) || { revenue: 0, hours: 0, billIds: [] }
       dailyStatsMap.set(key, {
         revenue: existing.revenue + actualRevenue,
-        hours: existing.hours + bill.totalHours
+        hours: existing.hours + bill.totalHours,
+        billIds: [...existing.billIds, bill.id]
       })
     })
 
     const dailyStats = Array.from(dailyStatsMap.entries())
-      .map(([date, stats]) => ({ date, ...stats }))
+      .map(([date, stats]) => ({
+        date,
+        revenue: Math.round(stats.revenue * 100) / 100,
+        hours: stats.hours
+      }))
       .sort((a, b) => a.date.localeCompare(b.date))
-
-    const calcActualRevenue = (billsArr: Bill[]) =>
-      billsArr.reduce((sum, b) => {
-        if (b.status === 'paid') return sum + b.total - (b.refundAmount || 0)
-        return sum
-      }, 0)
 
     const stationStats: RevenueStatItem[] = stations.map(station => {
       const stationBills = monthBills.filter(b => b.stationId === station.id)
@@ -551,7 +602,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       return {
         id: station.id,
         name: station.name,
-        totalRevenue,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
         totalHours,
         billCount,
         avgRevenuePerHour: totalHours > 0 ? Math.round(totalRevenue / totalHours * 100) / 100 : 0
@@ -566,7 +617,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       return {
         id: ph.id,
         name: ph.name,
-        totalRevenue,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
         totalHours,
         billCount,
         avgRevenuePerHour: totalHours > 0 ? Math.round(totalRevenue / totalHours * 100) / 100 : 0
@@ -581,7 +632,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
       return {
         id: level,
         name: getMemberLevelLabel(level),
-        totalRevenue,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
         totalHours,
         billCount,
         avgRevenuePerHour: totalHours > 0 ? Math.round(totalRevenue / totalHours * 100) / 100 : 0
@@ -593,7 +644,7 @@ export const useBillsStore = create<BillsState>((set, get) => ({
 
     return {
       month,
-      totalRevenue,
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
       totalHours,
       totalBills: monthBills.filter(b => b.status !== 'cancelled').length,
       stationStats,
