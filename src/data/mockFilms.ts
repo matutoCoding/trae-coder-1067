@@ -1,4 +1,4 @@
-import type { FilmRecord } from '@/types'
+import type { FilmFormat, ProcessType } from '@/types'
 
 export const filmTypes = [
   { value: '柯达Tri-X 400', label: '柯达Tri-X 400', price: 35 },
@@ -27,37 +27,13 @@ export const processTypes = [
 ]
 
 export const formatOptions = [
-  { value: '135', label: '135 (35mm)' },
-  { value: '120', label: '120 中画幅' },
-  { value: '4x5', label: '4×5 大画幅' },
-  { value: '8x10', label: '8×10 大画幅' }
+  { value: '135', label: '135 (35mm)', multiplier: 1 },
+  { value: '120', label: '120 中画幅', multiplier: 1.5 },
+  { value: '4x5', label: '4×5 大画幅', multiplier: 2 },
+  { value: '8x10', label: '8×10 大画幅', multiplier: 3 }
 ]
 
-export const calculateFilmPrice = (
-  filmType: string,
-  processType: string,
-  quantity: number,
-  format: string
-): number => {
-  const film = filmTypes.find(f => f.value === filmType)
-  const process = processTypes.find(p => p.value === processType)
-
-  const basePrice = (film?.price || 30) + (process?.price || 25)
-
-  const formatMultiplier = format === '8x10' ? 3 : format === '4x5' ? 2 : format === '120' ? 1.5 : 1
-
-  return Math.round(basePrice * quantity * formatMultiplier * 100) / 100
+export const getFormatMultiplier = (format: string): number => {
+  const fmt = formatOptions.find(f => f.value === format)
+  return fmt?.multiplier || 1
 }
-
-export const mockFilmRecords: FilmRecord[] = [
-  {
-    id: 'FR-001',
-    filmType: '柯达ColorPlus 200',
-    format: '135',
-    processType: 'C-41',
-    quantity: 2,
-    price: 80,
-    notes: '彩色负片冲洗扫描',
-    createdAt: new Date().toISOString()
-  }
-]

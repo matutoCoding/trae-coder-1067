@@ -1,277 +1,557 @@
 @use '@/styles/variables.scss' as *;
+@use '@/styles/theme.scss' as *;
 
 .pageContainer {
   min-height: 100vh;
-  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
-  padding-bottom: 120rpx;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl * 2;
+}
 
-  .billHeader {
-    padding: $spacing-xl $page-padding;
-    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl * 3 $page-padding;
 
-    .billStatus {
-      display: inline-block;
-      padding: $spacing-xs $spacing-md;
-      background: rgba(255, 255, 255, 0.2);
-      color: $color-text-white;
-      border-radius: $radius-round;
-      font-size: $font-size-sm;
-      font-weight: $font-weight-medium;
-      margin-bottom: $spacing-md;
-    }
-
-    .billAmount {
-      font-size: 80rpx;
-      font-weight: $font-weight-bold;
-      color: $color-text-white;
-      margin-bottom: $spacing-xs;
-    }
-
-    .billInfo {
-      display: flex;
-      justify-content: space-between;
-      margin-top: $spacing-md;
-
-      .infoItem {
-        .infoLabel {
-          font-size: $font-size-xs;
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: $spacing-xs;
-        }
-
-        .infoValue {
-          font-size: $font-size-sm;
-          color: $color-text-white;
-          font-weight: $font-weight-medium;
-        }
-      }
-    }
+  .emptyIcon {
+    font-size: 120rpx;
+    margin-bottom: $spacing-md;
   }
 
-  .section {
-    padding: $spacing-lg $page-padding;
+  .emptyText {
+    font-size: $font-size-md;
+    color: $color-text-tertiary;
+  }
+}
+
+.pageHeader {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+
+  .headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .headerTitle {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    color: $color-text-white;
+    display: block;
+    margin-bottom: $spacing-xs;
+  }
+
+  .billNo {
+    font-size: $font-size-sm;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.statusBadge {
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-round;
+
+  &.pending {
+    background: rgba(#FFA940, 0.2);
+    .statusText { color: #FFA940; }
+  }
+
+  &.paid {
+    background: rgba(#52C41A, 0.2);
+    .statusText { color: #52C41A; }
+  }
+
+  &.refunded {
+    background: rgba(#7A7A9D, 0.2);
+    .statusText { color: #7A7A9D; }
+  }
+
+  .statusText {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.section {
+  padding: $spacing-md $page-padding 0;
+
+  .sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
 
     .sectionTitle {
-      font-size: $font-size-lg;
+      font-size: $font-size-md;
       font-weight: $font-weight-semibold;
       color: $color-text-primary;
-      margin-bottom: $spacing-md;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-
-      .actionLink {
-        font-size: $font-size-sm;
-        color: $color-primary-light;
-        font-weight: $font-weight-medium;
-      }
     }
 
-    .card {
-      background: $color-bg-card;
-      border-radius: $radius-lg;
-      padding: $spacing-lg;
-      box-shadow: $shadow-card;
-
-      .infoRow {
-        display: flex;
-        justify-content: space-between;
-        padding: $spacing-sm 0;
-        border-bottom: 1rpx solid $color-divider;
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        .label {
-          font-size: $font-size-sm;
-          color: $color-text-secondary;
-        }
-
-        .value {
-          font-size: $font-size-sm;
-          color: $color-text-primary;
-          font-weight: $font-weight-medium;
-        }
-
-        .valueHighlight {
-          font-size: $font-size-md;
-          color: $color-price;
-          font-weight: $font-weight-semibold;
-        }
-      }
+    .sectionAction {
+      font-size: $font-size-sm;
+      color: $color-primary;
     }
   }
+}
 
-  .tierBreakdown {
-    .tierItem {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      padding: $spacing-md 0;
-      border-bottom: 1rpx solid $color-divider;
+.infoCard,
+.feeCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
 
-      &:last-child {
-        border-bottom: none;
-      }
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: $spacing-sm 0;
 
-      .tierInfo {
-        flex: 1;
-
-        .tierName {
-          font-size: $font-size-sm;
-          color: $color-text-primary;
-          font-weight: $font-weight-medium;
-          margin-bottom: $spacing-xs;
-        }
-
-        .tierDetail {
-          font-size: $font-size-xs;
-          color: $color-text-tertiary;
-        }
-      }
-
-      .tierPrice {
-        font-size: $font-size-sm;
-        color: $color-price;
-        font-weight: $font-weight-semibold;
-      }
-    }
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
   }
 
-  .filmRecords {
-    .filmItem {
-      display: flex;
-      justify-content: space-between;
-      padding: $spacing-md 0;
-      border-bottom: 1rpx solid $color-divider;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .filmInfo {
-        .filmName {
-          font-size: $font-size-sm;
-          color: $color-text-primary;
-          font-weight: $font-weight-medium;
-          margin-bottom: $spacing-xs;
-        }
-
-        .filmSpecs {
-          font-size: $font-size-xs;
-          color: $color-text-tertiary;
-        }
-      }
-
-      .filmPrice {
-        font-size: $font-size-sm;
-        color: $color-price;
-        font-weight: $font-weight-semibold;
-      }
-    }
+  .infoLabel {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    flex-shrink: 0;
   }
 
-  .summaryCard {
-    background: $color-bg-card;
-    border-radius: $radius-lg;
-    padding: $spacing-lg;
-    box-shadow: $shadow-card;
-
-    .summaryRow {
-      display: flex;
-      justify-content: space-between;
-      padding: $spacing-sm 0;
-
-      .label {
-        font-size: $font-size-sm;
-        color: $color-text-secondary;
-      }
-
-      .value {
-        font-size: $font-size-sm;
-        color: $color-text-primary;
-      }
-
-      &.total {
-        padding-top: $spacing-md;
-        margin-top: $spacing-sm;
-        border-top: 2rpx solid $color-divider;
-
-        .label {
-          font-size: $font-size-md;
-          font-weight: $font-weight-semibold;
-          color: $color-text-primary;
-        }
-
-        .value {
-          font-size: $font-size-xl;
-          font-weight: $font-weight-bold;
-          color: $color-price;
-        }
-      }
-    }
-  }
-
-  .actionBar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: $spacing-md $page-padding;
-    padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
-    background: $color-bg-card;
-    border-top: 1rpx solid $color-divider;
+  .infoValue {
     display: flex;
-    gap: $spacing-md;
+    align-items: center;
+    gap: $spacing-sm;
+  }
 
-    .btn {
-      flex: 1;
-      height: $button-height-lg;
-      border-radius: $radius-button;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: $font-size-md;
+  .infoText {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    text-align: right;
+  }
+
+  .photographerName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .levelBadge {
+    padding: 2rpx $spacing-sm;
+    border-radius: $radius-round;
+
+    .levelText {
+      font-size: $font-size-xs;
+      color: $color-text-white;
       font-weight: $font-weight-medium;
-      transition: all $transition-base;
+    }
+  }
+}
 
-      @include button-reset;
+.feeCard {
+  .feeRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-sm 0;
 
-      &:active {
-        transform: scale(0.98);
-      }
+    .feeLabel {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
 
-      &.secondary {
-        background: $color-bg-secondary;
-        color: $color-text-primary;
-      }
-
-      &.danger {
-        background: rgba($color-error, 0.1);
-        color: $color-error;
-      }
-
-      &.primary {
-        background: $color-primary;
-        color: $color-text-white;
-      }
+    .feeValue {
+      font-size: $font-size-sm;
+      color: $color-text-primary;
     }
   }
 
-  .emptyState {
-    padding: $spacing-xl * 2;
-    text-align: center;
+  .discountRow {
+    .discountValue {
+      font-size: $font-size-sm;
+      color: $color-success;
+    }
+  }
 
-    .emptyIcon {
-      font-size: 96rpx;
-      opacity: 0.3;
-      margin-bottom: $spacing-md;
+  .refundRow {
+    .refundValue {
+      font-size: $font-size-sm;
+      color: #F5222D;
+    }
+  }
+
+  .totalRow {
+    padding: $spacing-md 0 $spacing-sm;
+
+    .totalLabel {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
     }
 
-    .emptyText {
-      font-size: $font-size-md;
+    .totalValue {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $color-price;
+    }
+  }
+
+  .remainingRow {
+    padding-top: $spacing-sm;
+  }
+
+  .feeDivider {
+    height: 1rpx;
+    background: $color-divider;
+    margin: $spacing-sm 0;
+  }
+}
+
+.emptyFilm {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  text-align: center;
+
+  .emptyFilmText {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+}
+
+.filmList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.filmItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+
+  .filmInfo {
+    flex: 1;
+  }
+
+  .filmRow {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: 4rpx;
+  }
+
+  .filmName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+  }
+
+  .formatBadge {
+    background: rgba($color-primary, 0.1);
+    padding: 2rpx $spacing-sm;
+    border-radius: $radius-xs;
+
+    .formatText {
+      font-size: $font-size-xs;
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  .filmMeta {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .filmPrice {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-price;
+  }
+}
+
+.timeline {
+  padding-left: $spacing-md;
+  position: relative;
+}
+
+.timelineItem {
+  position: relative;
+  padding-bottom: $spacing-lg;
+  padding-left: $spacing-lg;
+
+  &:last-child {
+    padding-bottom: 0;
+
+    .timelineLine {
+      display: none;
+    }
+  }
+
+  .timelineDot {
+    position: absolute;
+    left: 0;
+    top: $spacing-xs;
+    width: 16rpx;
+    height: 16rpx;
+    border-radius: 50%;
+    background: $color-primary;
+    z-index: 1;
+  }
+
+  .timelineLine {
+    position: absolute;
+    left: 6rpx;
+    top: $spacing-xs + 16rpx;
+    width: 4rpx;
+    height: calc(100% - 16rpx);
+    background: $color-divider;
+  }
+
+  .timelineContent {
+    background: $color-bg-card;
+    border-radius: $radius-md;
+    padding: $spacing-md;
+  }
+
+  .timelineHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+
+    .operationType {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .operationTime {
+      font-size: $font-size-xs;
       color: $color-text-tertiary;
+    }
+  }
+
+  .amountChange {
+    font-size: $font-size-md;
+    font-weight: $font-weight-bold;
+    margin-bottom: $spacing-xs;
+
+    &.positive {
+      color: $color-success;
+    }
+
+    &.negative {
+      color: #F5222D;
+    }
+  }
+
+  .balance {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-xs;
+  }
+
+  .operationNotes {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-xs;
+    display: block;
+  }
+
+  .operator {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.bottomActions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: $spacing-md $page-padding calc($spacing-md + env(safe-area-inset-bottom));
+  background: $color-bg-card;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.1);
+  display: flex;
+  gap: $spacing-sm;
+
+  .btnPrimary,
+  .btnSecondary,
+  .btnDanger {
+    flex: 1;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    height: 88rpx;
+    line-height: 88rpx;
+  }
+
+  .btnPrimary {
+    background: $color-primary;
+    color: $color-text-white;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btnSecondary {
+    background: $color-bg-secondary;
+    color: $color-text-primary;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btnDanger {
+    background: #F5222D;
+    color: $color-text-white;
+
+    &::after {
+      border: none;
+    }
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: $page-padding;
+}
+
+.modalContent {
+  width: 100%;
+  max-width: 600rpx;
+  background: $color-bg-card;
+  border-radius: $radius-xl;
+  overflow: hidden;
+}
+
+.modalTitle {
+  display: block;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  padding: $spacing-lg $spacing-md;
+  text-align: center;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.modalBody {
+  padding: $spacing-md;
+}
+
+.formItem {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .formLabel {
+    display: block;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-sm;
+  }
+
+  .formValue {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $color-price;
+  }
+
+  .formInput {
+    width: 100%;
+    height: 80rpx;
+    line-height: 80rpx;
+    padding: 0 $spacing-md;
+    background: $color-bg-secondary;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+  }
+
+  .formTextarea {
+    width: 100%;
+    min-height: 120rpx;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-secondary;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+  }
+}
+
+.modalActions {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border-top: 1rpx solid $color-divider;
+
+  .btnCancel,
+  .btnConfirm,
+  .btnSecondary,
+  .btnDanger {
+    flex: 1;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    height: 72rpx;
+    line-height: 72rpx;
+  }
+
+  .btnCancel {
+    background: $color-bg-secondary;
+    color: $color-text-secondary;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btnConfirm {
+    background: $color-primary;
+    color: $color-text-white;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btnSecondary {
+    background: $color-bg-secondary;
+    color: $color-text-primary;
+
+    &::after {
+      border: none;
+    }
+  }
+
+  .btnDanger {
+    background: #F5222D;
+    color: $color-text-white;
+
+    &::after {
+      border: none;
     }
   }
 }

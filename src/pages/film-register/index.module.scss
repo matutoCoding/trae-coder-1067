@@ -1,298 +1,364 @@
 @use '@/styles/variables.scss' as *;
+@use '@/styles/theme.scss' as *;
 
 .pageContainer {
   min-height: 100vh;
-  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
-  padding-bottom: 160rpx;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl * 2;
+}
 
-  .formGroup {
-    padding: $spacing-lg $page-padding;
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl * 3 $page-padding;
 
-    .formLabel {
+  .emptyIcon {
+    font-size: 120rpx;
+    margin-bottom: $spacing-md;
+  }
+
+  .emptyText {
+    font-size: $font-size-md;
+    color: $color-text-tertiary;
+  }
+}
+
+.pageHeader {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+
+  .headerTitle {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    color: $color-text-white;
+    display: block;
+    margin-bottom: $spacing-xs;
+  }
+
+  .headerSubtitle {
+    font-size: $font-size-sm;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.section {
+  padding: $spacing-md $page-padding 0;
+
+  .sectionHeader {
+    margin-bottom: $spacing-md;
+
+    .sectionTitle {
       font-size: $font-size-md;
       font-weight: $font-weight-semibold;
       color: $color-text-primary;
-      margin-bottom: $spacing-md;
-    }
-
-    .formCard {
-      background: $color-bg-card;
-      border-radius: $radius-lg;
-      padding: $spacing-lg;
-      box-shadow: $shadow-card;
-    }
-
-    .formRow {
-      margin-bottom: $spacing-lg;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      .rowLabel {
-        font-size: $font-size-sm;
-        color: $color-text-secondary;
-        margin-bottom: $spacing-sm;
-      }
-
-      .input {
-        width: 100%;
-        height: $button-height-md;
-        padding: 0 $spacing-md;
-        background: $color-bg-secondary;
-        border-radius: $radius-md;
-        border: 2rpx solid transparent;
-        font-size: $font-size-sm;
-        color: $color-text-primary;
-        transition: all $transition-fast;
-
-        &:focus {
-          border-color: $color-primary;
-          background: $color-bg-card;
-        }
-      }
-
-      .textarea {
-        width: 100%;
-        min-height: 160rpx;
-        padding: $spacing-md;
-        background: $color-bg-secondary;
-        border-radius: $radius-md;
-        border: 2rpx solid transparent;
-        font-size: $font-size-sm;
-        color: $color-text-primary;
-        line-height: $line-height-relaxed;
-        transition: all $transition-fast;
-
-        &:focus {
-          border-color: $color-primary;
-          background: $color-bg-card;
-        }
-      }
-    }
-
-    .selectorGrid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: $spacing-md;
-    }
-
-    .selectorItem {
-      height: $button-height-md;
-      border-radius: $radius-md;
-      background: $color-bg-secondary;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: $font-size-sm;
-      color: $color-text-secondary;
-      border: 2rpx solid transparent;
-      transition: all $transition-fast;
-
-      @include button-reset;
-
-      &.active {
-        background: rgba($color-primary, 0.15);
-        border-color: $color-primary;
-        color: $color-primary-light;
-        font-weight: $font-weight-medium;
-      }
-
-      &:active {
-        transform: scale(0.96);
-      }
-    }
-
-    .stepperRow {
-      display: flex;
-      align-items: center;
-      gap: $spacing-lg;
-
-      .stepperBtn {
-        width: 72rpx;
-        height: 72rpx;
-        border-radius: 50%;
-        background: $color-bg-secondary;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: $font-size-xl;
-        color: $color-text-secondary;
-        transition: all $transition-fast;
-
-        @include button-reset;
-
-        &:active {
-          transform: scale(0.9);
-          background: $color-primary;
-          color: $color-text-white;
-        }
-
-        &.disabled {
-          opacity: 0.3;
-        }
-      }
-
-      .stepperValue {
-        min-width: 120rpx;
-        text-align: center;
-        font-size: $font-size-xl;
-        font-weight: $font-weight-bold;
-        color: $color-text-primary;
-      }
-    }
-
-    .pricePreview {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: $spacing-lg;
-      background: linear-gradient(135deg, rgba($color-primary, 0.15), rgba($color-primary-light, 0.05));
-      border-radius: $radius-lg;
-      border: 1rpx solid rgba($color-primary, 0.3);
-
-      .priceLabel {
-        font-size: $font-size-sm;
-        color: $color-text-secondary;
-      }
-
-      .priceValue {
-        font-size: $font-size-xxl;
-        font-weight: $font-weight-bold;
-        color: $color-price;
-      }
     }
   }
+}
 
-  .filmList {
-    padding: 0 $page-padding;
-    margin-bottom: $spacing-lg;
+.billInfoCard,
+.formCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
 
-    .filmItem {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: $color-bg-card;
-      border-radius: $radius-lg;
-      padding: $spacing-md $spacing-lg;
-      margin-bottom: $spacing-sm;
-      box-shadow: $shadow-card;
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
 
-      .filmInfo {
-        flex: 1;
-
-        .filmName {
-          font-size: $font-size-sm;
-          font-weight: $font-weight-medium;
-          color: $color-text-primary;
-          margin-bottom: $spacing-xs;
-        }
-
-        .filmSpecs {
-          font-size: $font-size-xs;
-          color: $color-text-tertiary;
-        }
-      }
-
-      .filmPrice {
-        font-size: $font-size-md;
-        font-weight: $font-weight-semibold;
-        color: $color-price;
-        margin-right: $spacing-md;
-      }
-
-      .deleteBtn {
-        width: 56rpx;
-        height: 56rpx;
-        border-radius: 50%;
-        background: rgba($color-error, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: $font-size-md;
-        color: $color-error;
-
-        @include button-reset;
-      }
-    }
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
   }
 
-  .quickAddSection {
-    padding: 0 $page-padding $spacing-lg;
-
-    .sectionHeader {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: $spacing-md;
-
-      .sectionTitle {
-        font-size: $font-size-md;
-        font-weight: $font-weight-semibold;
-        color: $color-text-primary;
-      }
-
-      .countBadge {
-        font-size: $font-size-sm;
-        color: $color-text-tertiary;
-      }
-    }
+  .infoLabel {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
   }
 
-  .actionBar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: $spacing-md $page-padding;
-    padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
-    background: $color-bg-card;
-    border-top: 1rpx solid $color-divider;
+  .infoValue {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+  }
+
+  .infoValueHighlight {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-price;
+  }
+}
+
+.formItem {
+  margin-bottom: $spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .formLabel {
+    display: block;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-sm;
+  }
+
+  .formPicker {
     display: flex;
-    gap: $spacing-md;
+    align-items: center;
+    gap: $spacing-sm;
+    height: 72rpx;
+    padding: 0 $spacing-md;
+    background: $color-bg-secondary;
+    border-radius: $radius-md;
 
-    .btn {
+    .pickerText {
       flex: 1;
-      height: $button-height-lg;
-      border-radius: $radius-button;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-size: $font-size-md;
-      font-weight: $font-weight-medium;
-      transition: all $transition-base;
-
-      @include button-reset;
-
-      &:active {
-        transform: scale(0.98);
-      }
-
-      &.secondary {
-        background: $color-bg-secondary;
-        color: $color-text-primary;
-      }
-
-      &.primary {
-        background: $color-primary;
-        color: $color-text-white;
-      }
-    }
-  }
-
-  .emptyState {
-    padding: $spacing-xl * 2;
-    text-align: center;
-
-    .emptyIcon {
-      font-size: 96rpx;
-      opacity: 0.3;
-      margin-bottom: $spacing-md;
+      color: $color-text-primary;
     }
 
-    .emptyText {
-      font-size: $font-size-md;
+    .pickerHint {
+      font-size: $font-size-sm;
       color: $color-text-tertiary;
     }
+
+    .pickerArrow {
+      font-size: $font-size-xs;
+      color: $color-text-tertiary;
+    }
+  }
+
+  .formTextarea {
+    width: 100%;
+    min-height: 100rpx;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-secondary;
+    border-radius: $radius-md;
+    font-size: $font-size-md;
+    color: $color-text-primary;
+  }
+}
+
+.formatGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-sm;
+}
+
+.formatItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+  border: 2rpx solid transparent;
+  transition: all $transition-fast;
+
+  &.active {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.1);
+  }
+
+  .formatLabel {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    margin-bottom: 4rpx;
+  }
+
+  .formatMultiplier {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.quantityRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+
+  .quantityBtn {
+    width: 56rpx;
+    height: 56rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $color-bg-secondary;
+    border-radius: $radius-sm;
+
+    .quantityBtnText {
+      font-size: $font-size-lg;
+      color: $color-text-primary;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  .quantityValue {
+    min-width: 60rpx;
+    text-align: center;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+  }
+
+  .quantityUnit {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+.pricePreview {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  background: $color-bg-secondary;
+  border-radius: $radius-md;
+
+  .priceRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-xs 0;
+
+    .priceLabel {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+
+    .priceValue {
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+    }
+  }
+
+  .priceRowTotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: $spacing-sm;
+    padding-top: $spacing-sm;
+    border-top: 1rpx solid $color-divider;
+
+    .totalLabel {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .totalValue {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $color-price;
+    }
+  }
+}
+
+.btnAdd {
+  margin-top: $spacing-lg;
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: $color-primary;
+  border-radius: $radius-md;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-white;
+
+  &::after {
+    border: none;
+  }
+}
+
+.emptyList {
+  padding: $spacing-xl;
+  text-align: center;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+
+  .emptyListText {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+  }
+}
+
+.filmList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.filmItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-divider;
+  }
+
+  .filmInfo {
+    flex: 1;
+  }
+
+  .filmRow {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin-bottom: 4rpx;
+  }
+
+  .filmName {
+    font-size: $font-size-md;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+  }
+
+  .formatBadge {
+    background: rgba($color-primary, 0.1);
+    padding: 2rpx $spacing-sm;
+    border-radius: $radius-xs;
+
+    .formatText {
+      font-size: $font-size-xs;
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  .filmMeta {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .filmActions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+
+    .filmPrice {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-price;
+    }
+
+    .deleteBtn {
+      font-size: $font-size-sm;
+      color: #F5222D;
+    }
+  }
+}
+
+.bottomTip {
+  padding: $spacing-md $page-padding;
+  text-align: center;
+
+  .tipText {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
   }
 }

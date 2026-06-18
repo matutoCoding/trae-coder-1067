@@ -7,7 +7,8 @@ export default defineAppConfig({
     'pages/station-detail/index',
     'pages/bill-detail/index',
     'pages/film-register/index',
-    'pages/tier-config/index'
+    'pages/tier-config/index',
+    'pages/revenue-dashboard/index'
   ],
   window: {
     backgroundTextStyle: 'light',

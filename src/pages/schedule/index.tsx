@@ -13,7 +13,8 @@ import { useBillsStore } from '@/store/useBillsStore'
 import { getStationTypeLabel } from '@/data/mockStations'
 import { calculatePricing, formatDuration } from '@/utils/pricing'
 import { calculateDuration } from '@/utils/booking'
-import type { Booking } from '@/types'
+import type { Booking, MemberLevel } from '@/types'
+import { MEMBER_LEVELS } from '@/types'
 
 const SchedulePage: React.FC = () => {
   const {
@@ -46,6 +47,7 @@ const SchedulePage: React.FC = () => {
   const [bookingForm, setBookingForm] = useState({
     photographerName: '',
     photographerId: '',
+    memberLevel: 'normal' as MemberLevel,
     filmType: '',
     notes: ''
   })
@@ -84,13 +86,9 @@ const SchedulePage: React.FC = () => {
     const endTime = selected[selected.length - 1].endTime
     const duration = calculateDuration(startTime, endTime)
     const baseRate = selectedStation?.hourlyRate || 80
-    const adjustedTiers = tiers.map(t => ({
-      ...t,
-      rate: Math.round(t.rate * (baseRate / 80))
-    }))
-    const result = calculatePricing(duration, adjustedTiers)
+    const result = calculatePricing(duration, tiers, bookingForm.memberLevel, baseRate)
     return result.total
-  }, [selectedSlots, timeSlots, selectedStation, tiers])
+  }, [selectedSlots, timeSlots, selectedStation, tiers, bookingForm.memberLevel])
 
   const selectedDuration = useMemo(() => {
     if (selectedSlots.length === 0 || timeSlots.length === 0) return 0
@@ -127,6 +125,7 @@ const SchedulePage: React.FC = () => {
     const booking = createBooking(
       photographerId,
       bookingForm.photographerName.trim(),
+      bookingForm.memberLevel,
       bookingForm.filmType.trim() || undefined,
       bookingForm.notes.trim() || undefined
     )
@@ -134,11 +133,12 @@ const SchedulePage: React.FC = () => {
     if (booking) {
       Taro.showToast({ title: '预订成功', icon: 'success' })
       setShowBookingModal(false)
-      setBookingForm({ photographerName: '', photographerId: '', filmType: '', notes: '' })
+      setBookingForm({ photographerName: '', photographerId: '', memberLevel: 'normal', filmType: '', notes: '' })
       clearSlotSelection()
 
       const stationName = selectedStation?.name || stations.find(s => s.id === booking.stationId)?.name || ''
-      generateBill(booking, stationName)
+      const hourlyRate = selectedStation?.hourlyRate || stations.find(s => s.id === booking.stationId)?.hourlyRate || 80
+      generateBill(booking, stationName, hourlyRate)
     } else {
       Taro.showToast({ title: '预订失败，请重试', icon: 'none' })
     }
@@ -196,7 +196,8 @@ const SchedulePage: React.FC = () => {
 
   const handleGenerateBill = (booking: Booking) => {
     const stationName = stations.find(s => s.id === booking.stationId)?.name || ''
-    const bill = generateBill(booking, stationName)
+    const hourlyRate = stations.find(s => s.id === booking.stationId)?.hourlyRate || 80
+    const bill = generateBill(booking, stationName, hourlyRate)
     if (bill) {
       Taro.navigateTo({
         url: `/pages/bill-detail/index?id=${bill.id}`
@@ -341,6 +342,30 @@ const SchedulePage: React.FC = () => {
                     onInput={(e) => setBookingForm({ ...bookingForm, photographerName: e.detail.value })}
                     placeholder='请输入摄影师姓名'
                   />
+                </View>
+                <View className={styles.formGroup}>
+                  <Text className={styles.formLabel}>会员等级</Text>
+                  <View className={styles.levelSelector}>
+                    {Object.entries(MEMBER_LEVELS).map(([key, value]) => (
+                      <View
+                        key={key}
+                        className={classnames(
+                          styles.levelOption,
+                          bookingForm.memberLevel === key && styles.active
+                        )}
+                        style={{
+                          borderColor: bookingForm.memberLevel === key ? value.color : undefined,
+                          background: bookingForm.memberLevel === key ? `${value.color}20` : undefined
+                        }}
+                        onClick={() => setBookingForm({ ...bookingForm, memberLevel: key as MemberLevel })}
+                      >
+                        <Text className={styles.levelText}>{value.label}</Text>
+                        <Text className={styles.levelDiscount}>
+                          {value.discountRate > 0 ? `${value.discountRate * 100}%折扣` : '无折扣'}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
                 <View className={styles.formGroup}>
                   <Text className={styles.formLabel}>胶片类型</Text>

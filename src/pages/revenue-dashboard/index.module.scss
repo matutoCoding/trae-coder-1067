@@ -1,0 +1,272 @@
+@use '@/styles/variables.scss' as *;
+
+.pageContainer {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl;
+}
+
+.pageHeader {
+  padding: $spacing-xl $page-padding $spacing-lg;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+
+  .headerTitle {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    color: $color-text-white;
+    margin-bottom: $spacing-md;
+  }
+
+  .monthPicker {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: $radius-round;
+    padding: $spacing-xs $spacing-lg;
+
+    .pickerContent {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+    }
+
+    .monthText {
+      font-size: $font-size-md;
+      font-weight: $font-weight-medium;
+      color: $color-text-white;
+    }
+
+    .pickerIcon {
+      font-size: $font-size-sm;
+      color: $color-text-white;
+    }
+  }
+}
+
+.summaryCards {
+  display: flex;
+  gap: $spacing-sm;
+  padding: 0 $page-padding;
+  margin-top: -$spacing-lg;
+
+  .summaryCard {
+    flex: 1;
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    padding: $spacing-md $spacing-sm;
+    text-align: center;
+    box-shadow: $shadow-card;
+
+    .summaryValue {
+      display: block;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-bold;
+      color: $color-price;
+      margin-bottom: $spacing-xs;
+    }
+
+    .summaryLabel {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+.tabBar {
+  display: flex;
+  padding: $spacing-md $page-padding;
+  gap: $spacing-sm;
+
+  .tabItem {
+    flex: 1;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-card;
+    border-radius: $radius-md;
+    text-align: center;
+    transition: all $transition-fast;
+
+    &.active {
+      background: $color-primary;
+
+      .tabText {
+        color: $color-text-white;
+      }
+    }
+  }
+
+  .tabText {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+  }
+}
+
+.statsList {
+  padding: 0 $page-padding;
+}
+
+.statCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+
+  .statCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+
+    .statCardName {
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .statCardPercent {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: $color-primary;
+      background: rgba($color-primary, 0.1);
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $radius-round;
+    }
+  }
+
+  .statCardBody {
+    display: flex;
+    gap: $spacing-sm;
+
+    .statItem {
+      flex: 1;
+      text-align: center;
+
+      .statItemValue {
+        display: block;
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+        margin-bottom: 2rpx;
+      }
+
+      .statItemLabel {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+      }
+    }
+  }
+
+  .statCardHint {
+    margin-top: $spacing-sm;
+    padding-top: $spacing-sm;
+    border-top: 1rpx solid $color-divider;
+    text-align: center;
+
+    .hintText {
+      font-size: $font-size-xs;
+      color: $color-primary;
+    }
+  }
+}
+
+.dailyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: $color-bg-card;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  .dailyDate {
+    .dailyDateText {
+      display: block;
+      font-size: $font-size-md;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+    }
+
+    .dailyWeekday {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+  }
+
+  .dailyStats {
+    display: flex;
+    align-items: center;
+    gap: $spacing-lg;
+
+    .dailyStat {
+      text-align: right;
+
+      .dailyStatValue {
+        display: block;
+        font-size: $font-size-md;
+        font-weight: $font-weight-semibold;
+        color: $color-text-primary;
+      }
+
+      .dailyStatLabel {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
+      }
+    }
+
+    .dailyArrow {
+      font-size: $font-size-md;
+      color: $color-primary;
+    }
+  }
+}
+
+.emptyState {
+  padding: $spacing-xl * 2 $page-padding;
+  text-align: center;
+
+  .emptyIcon {
+    display: block;
+    font-size: 80rpx;
+    margin-bottom: $spacing-md;
+  }
+
+  .emptyText {
+    font-size: $font-size-md;
+    color: $color-text-tertiary;
+  }
+}
+
+.legend {
+  padding: $spacing-lg $page-padding;
+  margin-top: $spacing-md;
+
+  .legendTitle {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-md;
+  }
+
+  .legendList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+  }
+
+  .legendItem {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+  }
+
+  .legendDot {
+    width: 20rpx;
+    height: 20rpx;
+    border-radius: 50%;
+  }
+
+  .legendText {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}

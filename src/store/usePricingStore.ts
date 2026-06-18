@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { PricingTier, PricingCalculationResult } from '@/types'
+import type { PricingTier, PricingCalculationResult, MemberLevel } from '@/types'
 import { mockTiers } from '@/data/mockTiers'
 import { calculatePricing, validateTierOverlap, generateDefaultTiers } from '@/utils/pricing'
 
@@ -7,10 +7,14 @@ interface PricingState {
   tiers: PricingTier[]
   calculationResult: PricingCalculationResult | null
   selectedHours: number
-  discountRate: number
+  memberLevel: MemberLevel
+  stationHourlyRate: number
+  extraDiscountRate: number
   setSelectedHours: (hours: number) => void
-  setDiscountRate: (rate: number) => void
-  calculate: (hours?: number) => PricingCalculationResult
+  setMemberLevel: (level: MemberLevel) => void
+  setStationHourlyRate: (rate: number) => void
+  setExtraDiscountRate: (rate: number) => void
+  calculate: (hours?: number, memberLevel?: MemberLevel, stationRate?: number, extraDiscount?: number) => PricingCalculationResult
   addTier: (tier: Omit<PricingTier, 'id'>) => boolean
   updateTier: (id: string, updates: Partial<PricingTier>) => boolean
   deleteTier: (id: string) => boolean
@@ -23,23 +27,40 @@ export const usePricingStore = create<PricingState>((set, get) => ({
   tiers: mockTiers,
   calculationResult: null,
   selectedHours: 1,
-  discountRate: 0,
+  memberLevel: 'normal',
+  stationHourlyRate: 80,
+  extraDiscountRate: 0,
 
   setSelectedHours: (hours) => {
     set({ selectedHours: hours })
     get().calculate(hours)
   },
 
-  setDiscountRate: (rate) => {
-    set({ discountRate: rate })
-    const { selectedHours } = get()
-    get().calculate(selectedHours)
+  setMemberLevel: (level) => {
+    set({ memberLevel: level })
+    const { selectedHours, stationHourlyRate, extraDiscountRate } = get()
+    get().calculate(selectedHours, level, stationHourlyRate, extraDiscountRate)
   },
 
-  calculate: (hours) => {
-    const { tiers, discountRate, selectedHours } = get()
+  setStationHourlyRate: (rate) => {
+    set({ stationHourlyRate: rate })
+    const { selectedHours, memberLevel, extraDiscountRate } = get()
+    get().calculate(selectedHours, memberLevel, rate, extraDiscountRate)
+  },
+
+  setExtraDiscountRate: (rate) => {
+    set({ extraDiscountRate: rate })
+    const { selectedHours, memberLevel, stationHourlyRate } = get()
+    get().calculate(selectedHours, memberLevel, stationHourlyRate, rate)
+  },
+
+  calculate: (hours, memberLevel, stationRate, extraDiscount) => {
+    const { tiers, selectedHours, memberLevel: currentLevel, stationHourlyRate: currentRate, extraDiscountRate: currentExtra } = get()
     const targetHours = hours ?? selectedHours
-    const result = calculatePricing(targetHours, tiers, discountRate)
+    const targetLevel = memberLevel ?? currentLevel
+    const targetRate = stationRate ?? currentRate
+    const targetExtra = extraDiscount ?? currentExtra
+    const result = calculatePricing(targetHours, tiers, targetLevel, targetRate, targetExtra)
     set({ calculationResult: result })
     return result
   },

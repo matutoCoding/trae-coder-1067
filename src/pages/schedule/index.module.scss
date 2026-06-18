@@ -145,6 +145,38 @@
           }
         }
 
+        .levelSelector {
+          display: flex;
+          gap: $spacing-sm;
+
+          .levelOption {
+            flex: 1;
+            padding: $spacing-sm;
+            background: $color-bg-card;
+            border: 2rpx solid $color-border;
+            border-radius: $radius-md;
+            text-align: center;
+            transition: all $transition-fast;
+
+            &.active {
+              border-width: 3rpx;
+            }
+
+            .levelText {
+              display: block;
+              font-size: $font-size-sm;
+              font-weight: $font-weight-medium;
+              color: $color-text-primary;
+              margin-bottom: 4rpx;
+            }
+
+            .levelDiscount {
+              font-size: $font-size-xs;
+              color: $color-text-tertiary;
+            }
+          }
+        }
+
         .submitBtn {
           width: 100%;
           height: $button-height-lg;

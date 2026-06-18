@@ -50,87 +50,122 @@ export interface PricingTier {
   isActive: boolean
 }
 
+export interface Photographer {
+  id: string
+  name: string
+  phone: string
+  email?: string
+  memberLevel: 'normal' | 'silver' | 'gold'
+  totalBookings: number
+  createdAt: string
+}
+
+export const MEMBER_LEVELS = {
+  normal: { label: '普通会员', discountRate: 0, color: '#7A7A9D' },
+  silver: { label: '银卡会员', discountRate: 0.05, color: '#C0C0C0' },
+  gold: { label: '金卡会员', discountRate: 0.1, color: '#FFD700' }
+} as const
+
+export type MemberLevel = keyof typeof MEMBER_LEVELS
+
+export interface BillOperationLog {
+  id: string
+  billId: string
+  operation: 'create' | 'pay' | 'partial_refund' | 'full_refund' | 'cancel' | 'update'
+  operator: string
+  amount: number
+  changeAmount: number
+  previousStatus: BillStatus
+  newStatus: BillStatus
+  notes?: string
+  createdAt: string
+}
+
 export interface Bill {
   id: string
   billNo: string
   bookingId?: string
   photographerId: string
   photographerName: string
+  photographerLevel?: MemberLevel
   stationId?: string
   stationName?: string
   date: string
   totalHours: number
   tierBreakdown: TierBreakdownItem[]
+  originalTotal: number
   stationFee: number
   filmFee: number
+  memberDiscountAmount: number
   discountAmount: number
   discountRate: number
+  refundAmount: number
   total: number
-  status: 'unpaid' | 'paid' | 'cancelled'
+  status: BillStatus
   filmRecords: FilmRecord[]
+  operationLogs: BillOperationLog[]
   notes?: string
   createdAt: string
   paidAt?: string
 }
 
-export interface TierBreakdownItem {
-  tierId: string
-  tierName: string
-  hours: number
-  rate: number
-  amount: number
-}
+export type BillStatus = 'unpaid' | 'paid' | 'refunded' | 'cancelled'
 
-export interface FilmRecord {
+export interface Booking {
   id: string
-  filmType: string
-  format: '135' | '120' | '4x5' | '8x10' | string
-  processType: 'C-41' | 'E-6' | '黑白' | '黑白反转' | '扫描' | string
-  quantity: number
-  price: number
+  stationId: string
+  photographerId: string
+  photographerName: string
+  photographerLevel?: MemberLevel
+  date: string
+  startTime: string
+  endTime: string
+  duration: number
+  isMerged: boolean
+  mergedFrom?: string[]
+  mergedTo?: string
+  status: BookingStatus
+  createdAt: string
+  filmType?: string
   notes?: string
-  createdAt: string
 }
 
-export interface Photographer {
-  id: string
-  name: string
-  phone: string
-  email?: string
-  memberLevel: 'normal' | 'silver' | 'gold' | 'platinum'
-  discountRate: number
-  totalBookings: number
-  createdAt: string
-}
-
-export interface BookingMergeResult {
-  success: boolean
-  mergedBooking?: Booking
-  mergedSlots?: string[]
-  message?: string
-}
-
-export interface BookingSplitResult {
-  success: boolean
-  newBookings?: Booking[]
-  updatedSlots?: string[]
-  message?: string
-}
+export type BookingStatus = 'active' | 'cancelled' | 'completed'
 
 export interface PricingCalculationResult {
   totalHours: number
   tierBreakdown: TierBreakdownItem[]
+  originalTotal: number
   total: number
   currentTier: PricingTier
   nextTier?: PricingTier
   hoursToNextTier: number
   nearTierThreshold: boolean
   stationFee: number
+  memberDiscountAmount: number
   discountAmount: number
   discountRate: number
 }
 
-export type BookingStatus = 'active' | 'cancelled' | 'completed'
-export type BillStatus = 'unpaid' | 'paid' | 'cancelled'
-export type FilmFormat = '35mm' | '120' | '4x5' | '8x10'
+export interface RevenueStatItem {
+  id: string
+  name: string
+  totalRevenue: number
+  totalHours: number
+  billCount: number
+  avgRevenuePerHour: number
+}
+
+export interface MonthlyStats {
+  month: string
+  totalRevenue: number
+  totalHours: number
+  totalBills: number
+  stationStats: RevenueStatItem[]
+  photographerStats: RevenueStatItem[]
+  memberLevelStats: RevenueStatItem[]
+  dailyStats: { date: string; revenue: number; hours: number }[]
+}
+
+export type FilmFormat = '135' | '120' | '4x5' | '8x10'
 export type ProcessType = 'develop_only' | 'develop_scan' | 'develop_print'

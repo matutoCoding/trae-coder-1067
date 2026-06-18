@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import dayjs from 'dayjs'
-import type { Station, Booking, TimeSlot } from '@/types'
+import type { Station, Booking, TimeSlot, MemberLevel } from '@/types'
 import { mockStations } from '@/data/mockStations'
 import { mockBookings } from '@/data/mockBookings'
 import { generateTimeSlots, mergeBookings, splitBooking, calculateDuration } from '@/utils/booking'
@@ -17,7 +17,7 @@ interface ScheduleState {
   toggleSlotSelection: (slotId: string) => void
   clearSlotSelection: () => void
   loadTimeSlots: (stationId: string, date: string) => void
-  createBooking: (photographerId: string, photographerName: string, filmType?: string, notes?: string) => Booking | null
+  createBooking: (photographerId: string, photographerName: string, memberLevel?: MemberLevel, filmType?: string, notes?: string) => Booking | null
   cancelBooking: (bookingId: string) => boolean
   mergeAdjacentBookings: (photographerId: string, stationId: string, date: string) => boolean
   splitMergedBooking: (bookingId: string, splitTime: string) => boolean
@@ -93,7 +93,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
     set({ timeSlots: slotsWithStatus })
   },
 
-  createBooking: (photographerId, photographerName, filmType, notes) => {
+  createBooking: (photographerId, photographerName, memberLevel, filmType, notes) => {
     const { selectedSlots, selectedStation, selectedDate, timeSlots } = get()
     if (selectedSlots.length === 0 || !selectedStation) return null
 
@@ -111,6 +111,7 @@ export const useScheduleStore = create<ScheduleState>((set, get) => ({
       stationId: selectedStation.id,
       photographerId,
       photographerName,
+      photographerLevel: memberLevel,
       date: selectedDate,
       startTime,
       endTime,

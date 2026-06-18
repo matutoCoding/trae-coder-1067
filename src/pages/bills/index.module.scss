@@ -1,194 +1,254 @@
 @use '@/styles/variables.scss' as *;
+@use '@/styles/theme.scss' as *;
 
 .pageContainer {
   min-height: 100vh;
-  background: linear-gradient(180deg, rgba($color-primary, 0.08) 0%, $color-bg-page 100%);
-  padding-bottom: 120rpx;
+  background: $color-bg-page;
+  padding-bottom: $spacing-xl;
+}
 
-  .pageHeader {
-    padding: $spacing-lg $page-padding;
-    background: transparent;
+.pageHeader {
+  padding: $spacing-xl $page-padding;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
 
-    .headerTitle {
-      font-size: $font-size-xxl;
+  .headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .headerTitle {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    color: $color-text-white;
+    display: block;
+    margin-bottom: $spacing-xs;
+  }
+
+  .headerSubtitle {
+    font-size: $font-size-sm;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .dashboardBtn {
+    padding: $spacing-sm $spacing-md;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: $radius-round;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-white;
+  }
+}
+
+.summaryCards {
+  display: flex;
+  gap: $spacing-sm;
+  padding: 0 $page-padding;
+  margin-top: -$spacing-lg;
+
+  .summaryCard {
+    flex: 1;
+    background: $color-bg-card;
+    border-radius: $radius-lg;
+    padding: $spacing-md $spacing-sm;
+    text-align: center;
+    box-shadow: $shadow-card;
+
+    &.warning {
+      border: 2rpx solid #FFA940;
+    }
+
+    .summaryValue {
+      display: block;
+      font-size: $font-size-lg;
       font-weight: $font-weight-bold;
-      color: $color-text-primary;
+      color: $color-price;
       margin-bottom: $spacing-xs;
     }
 
-    .headerSubtitle {
-      font-size: $font-size-sm;
-      color: $color-text-tertiary;
+    .summaryLabel {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
     }
   }
+}
 
-  .summaryCard {
-    margin: 0 $page-padding $spacing-lg;
-    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
-    border-radius: $radius-xl;
-    padding: $spacing-xl;
-    box-shadow: $shadow-float;
+.searchBar {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md $page-padding;
 
-    .summaryTitle {
-      font-size: $font-size-sm;
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: $spacing-md;
-    }
-
-    .summaryAmount {
-      font-size: 72rpx;
-      font-weight: $font-weight-bold;
-      color: $color-text-white;
-      margin-bottom: $spacing-lg;
-    }
-
-    .summaryRow {
-      display: flex;
-      justify-content: space-between;
-
-      .summaryItem {
-        flex: 1;
-        text-align: center;
-
-        .itemValue {
-          font-size: $font-size-xl;
-          font-weight: $font-weight-bold;
-          color: $color-text-white;
-          margin-bottom: $spacing-xs;
-        }
-
-        .itemLabel {
-          font-size: $font-size-xs;
-          color: rgba(255, 255, 255, 0.7);
-        }
-      }
-    }
+  .searchInput {
+    flex: 1;
+    height: 72rpx;
+    line-height: 72rpx;
+    padding: 0 $spacing-md;
+    background: $color-bg-card;
+    border-radius: $radius-md;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
   }
 
-  .filterTabs {
+  .filterBtn {
+    padding: 0 $spacing-lg;
+    height: 72rpx;
+    line-height: 72rpx;
+    background: $color-bg-card;
+    border-radius: $radius-md;
+    font-size: $font-size-sm;
+    color: $color-primary;
+    font-weight: $font-weight-medium;
+  }
+}
+
+.filterPanel {
+  margin: 0 $page-padding $spacing-md;
+  padding: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+
+  .filterRow {
     display: flex;
-    gap: $spacing-sm;
-    padding: 0 $page-padding;
-    margin-bottom: $spacing-lg;
+    align-items: center;
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
 
-    .tabItem {
-      flex: 1;
-      height: $button-height-md;
-      border-radius: $radius-button;
-      background: $color-bg-card;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .filterLabel {
+      width: 140rpx;
       font-size: $font-size-sm;
       color: $color-text-secondary;
-      transition: all $transition-base;
-
-      @include button-reset;
-
-      &.active {
-        background: $color-primary;
-        color: $color-text-white;
-      }
-
-      &:active {
-        transform: scale(0.96);
-      }
-
-      .badge {
-        margin-left: $spacing-xs;
-        padding: 2rpx 12rpx;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: $radius-round;
-        font-size: $font-size-xs;
-      }
+      flex-shrink: 0;
     }
-  }
 
-  .sectionTitle {
-    font-size: $font-size-lg;
-    font-weight: $font-weight-semibold;
-    color: $color-text-primary;
-    padding: 0 $page-padding;
-    margin-bottom: $spacing-md;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .countBadge {
+    .filterInput {
+      flex: 1;
+      height: 64rpx;
+      line-height: 64rpx;
+      padding: 0 $spacing-sm;
+      background: $color-bg-secondary;
+      border-radius: $radius-sm;
       font-size: $font-size-sm;
-      color: $color-text-tertiary;
-      font-weight: $font-weight-normal;
-    }
-  }
-
-  .billList {
-    padding: 0 $page-padding;
-  }
-
-  .emptyState {
-    padding: $spacing-xl * 2;
-    text-align: center;
-
-    .emptyIcon {
-      font-size: 120rpx;
-      opacity: 0.3;
-      margin-bottom: $spacing-md;
+      color: $color-text-primary;
     }
 
-    .emptyText {
-      font-size: $font-size-md;
-      color: $color-text-tertiary;
-      margin-bottom: $spacing-lg;
-    }
-
-    .actionBtn {
-      display: inline-block;
-      padding: $spacing-md $spacing-xl;
-      background: $color-primary;
-      border-radius: $radius-button;
-      color: $color-text-white;
-      font-size: $font-size-sm;
-      font-weight: $font-weight-medium;
-
-      @include button-reset;
-    }
-  }
-
-  .quickActions {
-    position: fixed;
-    bottom: 140rpx;
-    right: $page-padding;
-    display: flex;
-    flex-direction: column;
-    gap: $spacing-md;
-
-    .fabBtn {
-      width: 112rpx;
-      height: 112rpx;
-      border-radius: 50%;
-      background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    .filterPicker {
+      flex: 1;
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      box-shadow: $shadow-float;
-      transition: all $transition-base;
+      height: 64rpx;
+      padding: 0 $spacing-sm;
+      background: $color-bg-secondary;
+      border-radius: $radius-sm;
 
-      @include button-reset;
-
-      &:active {
-        transform: scale(0.9);
+      .filterPickerText {
+        font-size: $font-size-sm;
+        color: $color-text-primary;
       }
 
-      .fabIcon {
-        font-size: 40rpx;
-        margin-bottom: 4rpx;
+      .pickerArrow {
+        font-size: $font-size-xs;
+        color: $color-text-tertiary;
       }
+    }
+  }
 
-      .fabLabel {
-        font-size: 20rpx;
+  .filterActions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
+    border-top: 1rpx solid $color-divider;
+
+    .btnReset {
+      padding: 0 $spacing-lg;
+      height: 64rpx;
+      line-height: 64rpx;
+      background: $color-bg-secondary;
+      border-radius: $radius-sm;
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+
+      &::after {
+        border: none;
+      }
+    }
+  }
+}
+
+.tabBar {
+  display: flex;
+  padding: 0 $page-padding $spacing-md;
+  gap: $spacing-xs;
+  overflow-x: auto;
+
+  .tabItem {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-sm $spacing-md;
+    background: $color-bg-card;
+    border-radius: $radius-round;
+    transition: all $transition-fast;
+
+    &.active {
+      background: $color-primary;
+
+      .tabText,
+      .tabCount {
         color: $color-text-white;
       }
     }
+  }
+
+  .tabText {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .tabCount {
+    min-width: 36rpx;
+    height: 36rpx;
+    line-height: 36rpx;
+    text-align: center;
+    background: $color-bg-secondary;
+    border-radius: 50%;
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.billList {
+  padding: 0 $page-padding;
+}
+
+.emptyState {
+  padding: $spacing-xl * 2 $page-padding;
+  text-align: center;
+
+  .emptyIcon {
+    display: block;
+    font-size: 100rpx;
+    margin-bottom: $spacing-md;
+  }
+
+  .emptyText {
+    font-size: $font-size-md;
+    color: $color-text-tertiary;
+  }
+}
+
+.listFooter {
+  padding: $spacing-lg $page-padding;
+  text-align: center;
+
+  .footerText {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
   }
 }

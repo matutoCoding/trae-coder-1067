@@ -1,44 +1,52 @@
-import React, { useState, useMemo } from 'react'
-import { View, Text, ScrollView, Input, Textarea, Button } from '@tarojs/components'
+import React, { useState, useMemo, useEffect } from 'react'
+import { View, Text, ScrollView, Input, Textarea, Button, Picker } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import styles from './index.module.scss'
 import classnames from 'classnames'
 import { useBillsStore } from '@/store/useBillsStore'
-import { filmTypes, processTypes } from '@/data/mockFilms'
-import type { FilmRecord } from '@/types'
-import { formatCurrency } from '@/utils/pricing'
+import { filmTypes, processTypes, formatOptions } from '@/data/mockFilms'
+import type { FilmFormat } from '@/types'
+import { calculateFilmPrice, formatCurrency } from '@/utils/pricing'
 
 const FilmRegisterPage: React.FC = () => {
   const router = useRouter()
-  const { addFilmRecord, currentBill, bills, setCurrentBill, removeFilmRecord } = useBillsStore()
+  const { addFilmRecord, getBillById, currentBill, setCurrentBill, removeFilmRecord } = useBillsStore()
 
-  const billId = router.params.billId
+  const billId = router.params.billId as string
 
   const bill = useMemo(() => {
-    return bills.find(b => b.id === billId) || currentBill
-  }, [bills, currentBill, billId])
+    return currentBill || (billId ? getBillById(billId) : null)
+  }, [currentBill, billId, getBillById])
 
   const [filmType, setFilmType] = useState<string>(filmTypes[0].value)
-  const [format, setFormat] = useState<string>('135')
+  const [format, setFormat] = useState<FilmFormat | string>('135')
   const [processType, setProcessType] = useState<string>(processTypes[0].value)
   const [quantity, setQuantity] = useState<number>(1)
   const [notes, setNotes] = useState<string>('')
 
-  const formats = [
-    { key: '135', label: '135 (35mm)' },
-    { key: '120', label: '120 中画幅' },
-    { key: '4x5', label: '4×5 大画幅' },
-    { key: '8x10', label: '8×10 大画幅' }
-  ]
+  const filmTypeIndex = useMemo(() =>
+    filmTypes.findIndex(f => f.value === filmType),
+    [filmType]
+  )
+
+  const processTypeIndex = useMemo(() =>
+    processTypes.findIndex(p => p.value === processType),
+    [processType]
+  )
+
+  const formatIndex = useMemo(() =>
+    formatOptions.findIndex(f => f.value === format),
+    [format]
+  )
 
   const estimatedPrice = useMemo(() => {
-    const filmTypeConfig = filmTypes.find(f => f.value === filmType)
-    const processTypeConfig = processTypes.find(p => p.value === processType)
+    return calculateFilmPrice(filmType, processType, quantity, format)
+  }, [filmType, processType, quantity, format])
 
-    if (!filmTypeConfig || !processTypeConfig) return 0
-
-    return (filmTypeConfig.price + processTypeConfig.price) * quantity
-  }, [filmType, processType, quantity])
+  const formatMultiplier = useMemo(() => {
+    const fmt = formatOptions.find(f => f.value === format)
+    return fmt?.multiplier || 1
+  }, [format])
 
   const handleAddFilm = () => {
     if (!bill) {
@@ -46,199 +54,230 @@ const FilmRegisterPage: React.FC = () => {
       return
     }
 
-    const filmRecord: FilmRecord = {
-      id: `film_${Date.now()}`,
+    const success = addFilmRecord(bill.id, {
       filmType,
       format,
       processType,
       quantity,
-      price: estimatedPrice,
-      notes,
-      createdAt: new Date().toISOString()
-    }
-
-    const success = addFilmRecord(bill.id, filmRecord)
+      notes: notes || undefined
+    })
 
     if (success) {
       Taro.showToast({ title: '添加成功', icon: 'success' })
       setQuantity(1)
       setNotes('')
-    }
-  }
-
-  const handleQuantityChange = (delta: number) => {
-    const newValue = quantity + delta
-    if (newValue >= 1 && newValue <= 10) {
-      setQuantity(newValue)
-    }
-  }
-
-  const handleDeleteFilm = async (filmId: string) => {
-    if (!bill) return
-
-    const result = await Taro.showModal({
-      title: '删除记录',
-      content: '确定要删除这条胶片记录吗？',
-      confirmText: '删除',
-      confirmColor: '#FF4444',
-      cancelText: '取消'
-    })
-
-    if (result.confirm && bill) {
-      const success = removeFilmRecord(bill.id, filmId)
-      if (success) {
-        Taro.showToast({ title: '删除成功', icon: 'success' })
-      }
-    }
-  }
-
-  const handleBack = () => {
-    if (bill) {
-      setCurrentBill(bill)
-      Taro.navigateBack()
     } else {
-      Taro.switchTab({ url: '/pages/bills/index' })
+      Taro.showToast({ title: '添加失败', icon: 'none' })
     }
   }
 
-  const handleComplete = () => {
-    if (bill) {
-      setCurrentBill(bill)
-      Taro.showToast({ title: '登记完成', icon: 'success' })
-      setTimeout(() => {
-        Taro.navigateBack()
-      }, 1500)
+  const handleDeleteFilm = (recordId: string) => {
+    if (!bill) return
+    Taro.showModal({
+      title: '确认删除',
+      content: '确定要删除这条胶片记录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          const success = removeFilmRecord(bill.id, recordId)
+          if (success) {
+            Taro.showToast({ title: '已删除', icon: 'success' })
+          }
+        }
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (billId && !bill) {
+      const found = getBillById(billId)
+      if (found) setCurrentBill(found)
     }
+  }, [billId, bill, getBillById, setCurrentBill])
+
+  if (!bill) {
+    return (
+      <View className={styles.emptyState}>
+        <Text className={styles.emptyIcon}>🎞️</Text>
+        <Text className={styles.emptyText}>请先选择要添加胶片的账单</Text>
+      </View>
+    )
   }
 
   return (
     <ScrollView className={styles.pageContainer} scrollY>
-      {bill && (
-        <View className={styles.filmList}>
-          <View className={styles.quickAddSection}>
-            <View className={styles.sectionHeader}>
-              <Text className={styles.sectionTitle}>已登记胶片</Text>
-              <Text className={styles.countBadge}>共 {bill.filmRecords.length} 卷</Text>
-            </View>
-          </View>
-          {bill.filmRecords.length === 0 ? (
-            <View className={styles.emptyState}>
-              <Text className={styles.emptyIcon}>🎞️</Text>
-              <Text className={styles.emptyText}>暂无冲扫记录</Text>
-            </View>
-          ) : (
-            bill.filmRecords.map(record => (
-              <View key={record.id} className={styles.filmItem}>
-                <View className={styles.filmInfo}>
-                  <Text className={styles.filmName}>{record.filmType}</Text>
-                  <Text className={styles.filmSpecs}>
-                    {record.format} · {record.processType} · {record.quantity}卷
-                  </Text>
-                </View>
-                <Text className={styles.filmPrice}>{formatCurrency(record.price)}</Text>
-                <Button
-                  className={styles.deleteBtn}
-                  onClick={() => handleDeleteFilm(record.id)}
-                >
-                  ×
-                </Button>
-              </View>
-            ))
-          )}
+      <View className={styles.pageHeader}>
+        <Text className={styles.headerTitle}>胶片冲扫登记</Text>
+        <Text className={styles.headerSubtitle}>账单：{bill.billNo}</Text>
+      </View>
+
+      <View className={styles.section}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>当前账单信息</Text>
         </View>
-      )}
-
-      <View className={styles.formGroup}>
-        <Text className={styles.formLabel}>新增冲扫记录</Text>
-        <View className={styles.formCard}>
-          <View className={styles.formRow}>
-            <Text className={styles.rowLabel}>胶片类型</Text>
-            <View className={styles.selectorGrid}>
-              {filmTypes.map(type => (
-                <Button
-                  key={type.value}
-                  className={classnames(styles.selectorItem, filmType === type.value && styles.active)}
-                  onClick={() => setFilmType(type.value)}
-                >
-                  {type.label}
-                </Button>
-              ))}
-            </View>
+        <View className={styles.billInfoCard}>
+          <View className={styles.infoRow}>
+            <Text className={styles.infoLabel}>摄影师</Text>
+            <Text className={styles.infoValue}>{bill.photographerName}</Text>
           </View>
-
-          <View className={styles.formRow}>
-            <Text className={styles.rowLabel}>胶片规格</Text>
-            <View className={styles.selectorGrid}>
-              {formats.map(fmt => (
-                <Button
-                  key={fmt.key}
-                  className={classnames(styles.selectorItem, format === fmt.key && styles.active)}
-                  onClick={() => setFormat(fmt.key)}
-                >
-                  {fmt.label}
-                </Button>
-              ))}
-            </View>
-          </View>
-
-          <View className={styles.formRow}>
-            <Text className={styles.rowLabel}>冲扫工艺</Text>
-            <View className={styles.selectorGrid}>
-              {processTypes.map(pt => (
-                <Button
-                  key={pt.value}
-                  className={classnames(styles.selectorItem, processType === pt.value && styles.active)}
-                  onClick={() => setProcessType(pt.value)}
-                >
-                  {pt.label}
-                </Button>
-              ))}
-            </View>
-          </View>
-
-          <View className={styles.formRow}>
-            <Text className={styles.rowLabel}>数量（卷）</Text>
-            <View className={styles.stepperRow}>
-              <Button
-                className={classnames(styles.stepperBtn, quantity <= 1 && styles.disabled)}
-                onClick={() => handleQuantityChange(-1)}
-              >
-                -
-              </Button>
-              <Text className={styles.stepperValue}>{quantity}</Text>
-              <Button
-                className={classnames(styles.stepperBtn, quantity >= 10 && styles.disabled)}
-                onClick={() => handleQuantityChange(1)}
-              >
-                +
-              </Button>
-            </View>
-          </View>
-
-          <View className={styles.formRow}>
-            <Text className={styles.rowLabel}>备注</Text>
-            <Textarea
-              className={styles.textarea}
-              placeholder='输入特殊要求或备注信息...'
-              value={notes}
-              onInput={(e) => setNotes(e.detail.value)}
-            />
-          </View>
-
-          <View className={styles.pricePreview}>
-            <Text className={styles.priceLabel}>预估费用</Text>
-            <Text className={styles.priceValue}>{formatCurrency(estimatedPrice)}</Text>
+          <View className={styles.infoRow}>
+            <Text className={styles.infoLabel}>当前总金额</Text>
+            <Text className={styles.infoValueHighlight}>{formatCurrency(bill.total)}</Text>
           </View>
         </View>
       </View>
 
-      <View className={styles.actionBar}>
-        <Button className={classnames(styles.btn, styles.secondary)} onClick={handleBack}>
-          返回
-        </Button>
-        <Button className={classnames(styles.btn, styles.primary)} onClick={handleAddFilm}>
-          添加记录
-        </Button>
+      <View className={styles.section}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>添加胶片</Text>
+        </View>
+        <View className={styles.formCard}>
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>胶片类型</Text>
+            <Picker
+              mode='selector'
+              range={filmTypes.map(f => f.label)}
+              value={filmTypeIndex}
+              onChange={e => setFilmType(filmTypes[e.detail.value].value)}
+            >
+              <View className={styles.formPicker}>
+                <Text className={styles.pickerText}>{filmTypes[filmTypeIndex]?.label}</Text>
+                <Text className={styles.pickerHint}>¥{filmTypes[filmTypeIndex]?.price}/卷</Text>
+                <Text className={styles.pickerArrow}>▼</Text>
+              </View>
+            </Picker>
+          </View>
+
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>规格</Text>
+            <View className={styles.formatGrid}>
+              {formatOptions.map(fmt => (
+                <View
+                  key={fmt.value}
+                  className={classnames(styles.formatItem, format === fmt.value && styles.active)}
+                  onClick={() => setFormat(fmt.value)}
+                >
+                  <Text className={styles.formatLabel}>{fmt.label}</Text>
+                  <Text className={styles.formatMultiplier}>×{fmt.multiplier}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>冲洗工艺</Text>
+            <Picker
+              mode='selector'
+              range={processTypes.map(p => p.label)}
+              value={processTypeIndex}
+              onChange={e => setProcessType(processTypes[e.detail.value].value)}
+            >
+              <View className={styles.formPicker}>
+                <Text className={styles.pickerText}>{processTypes[processTypeIndex]?.label}</Text>
+                <Text className={styles.pickerHint}>¥{processTypes[processTypeIndex]?.price}/卷</Text>
+                <Text className={styles.pickerArrow}>▼</Text>
+              </View>
+            </Picker>
+          </View>
+
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>数量</Text>
+            <View className={styles.quantityRow}>
+              <View
+                className={styles.quantityBtn}
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              >
+                <Text className={styles.quantityBtnText}>-</Text>
+              </View>
+              <Text className={styles.quantityValue}>{quantity}</Text>
+              <View
+                className={styles.quantityBtn}
+                onClick={() => setQuantity(quantity + 1)}
+              >
+                <Text className={styles.quantityBtnText}>+</Text>
+              </View>
+              <Text className={styles.quantityUnit}>卷</Text>
+            </View>
+          </View>
+
+          <View className={styles.formItem}>
+            <Text className={styles.formLabel}>备注</Text>
+            <Textarea
+              className={styles.formTextarea}
+              placeholder='可选，输入特殊要求等'
+              value={notes}
+              onInput={e => setNotes(e.detail.value)}
+            />
+          </View>
+
+          <View className={styles.pricePreview}>
+            <View className={styles.priceRow}>
+              <Text className={styles.priceLabel}>单价合计</Text>
+              <Text className={styles.priceValue}>
+                {formatCurrency(filmTypes[filmTypeIndex]?.price || 0)} + {formatCurrency(processTypes[processTypeIndex]?.price || 0)}
+              </Text>
+            </View>
+            {formatMultiplier > 1 && (
+              <View className={styles.priceRow}>
+                <Text className={styles.priceLabel}>规格系数</Text>
+                <Text className={styles.priceValue}>×{formatMultiplier}</Text>
+              </View>
+            )}
+            <View className={styles.priceRow}>
+              <Text className={styles.priceLabel}>数量</Text>
+              <Text className={styles.priceValue}>×{quantity}</Text>
+            </View>
+            <View className={styles.priceRowTotal}>
+              <Text className={styles.totalLabel}>预估金额</Text>
+              <Text className={styles.totalValue}>{formatCurrency(estimatedPrice)}</Text>
+            </View>
+          </View>
+
+          <Button className={styles.btnAdd} onClick={handleAddFilm}>
+            添加到账单
+          </Button>
+        </View>
+      </View>
+
+      <View className={styles.section}>
+        <View className={styles.sectionHeader}>
+          <Text className={styles.sectionTitle}>已添加胶片 ({bill.filmRecords.length})</Text>
+        </View>
+        {bill.filmRecords.length === 0 ? (
+          <View className={styles.emptyList}>
+            <Text className={styles.emptyListText}>暂无胶片记录</Text>
+          </View>
+        ) : (
+          <View className={styles.filmList}>
+            {bill.filmRecords.map(record => (
+              <View key={record.id} className={styles.filmItem}>
+                <View className={styles.filmInfo}>
+                  <View className={styles.filmRow}>
+                    <Text className={styles.filmName}>{record.filmType}</Text>
+                    <View className={styles.formatBadge}>
+                      <Text className={styles.formatText}>{record.format}</Text>
+                    </View>
+                  </View>
+                  <Text className={styles.filmMeta}>
+                    {record.processType} · {record.quantity}卷
+                  </Text>
+                </View>
+                <View className={styles.filmActions}>
+                  <Text className={styles.filmPrice}>{formatCurrency(record.price)}</Text>
+                  <Text
+                    className={styles.deleteBtn}
+                    onClick={() => handleDeleteFilm(record.id)}
+                  >
+                    删除
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+
+      <View className={styles.bottomTip}>
+        <Text className={styles.tipText}>提示：添加胶片后会自动更新账单金额并记录操作日志</Text>
       </View>
     </ScrollView>
   )

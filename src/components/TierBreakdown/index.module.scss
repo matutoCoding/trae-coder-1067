@@ -1,0 +1,125 @@
+@use '@/styles/variables.scss' as *;
+@use '@/styles/theme.scss' as *;
+
+.container {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+
+  .title {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .totalHours {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+.tiers {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.tierItem {
+  .tierInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-xs;
+  }
+
+  .tierNameRow {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  .tierName {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+  }
+
+  .tierHours {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+    background: $color-bg-secondary;
+    padding: 2rpx $spacing-sm;
+    border-radius: $radius-xs;
+  }
+
+  .tierRateRow {
+    text-align: right;
+  }
+
+  .tierRate {
+    display: block;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+
+  .tierSubtotal {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+
+  .tierBar {
+    height: 16rpx;
+    background: $color-bg-secondary;
+    border-radius: $radius-xs;
+    overflow: hidden;
+  }
+
+  .tierBarFill {
+    height: 100%;
+    border-radius: $radius-xs;
+    transition: width $transition-base;
+
+    &.tier-1 {
+      background: linear-gradient(90deg, #52C41A 0%, #73D13D 100%);
+    }
+
+    &.tier-2 {
+      background: linear-gradient(90deg, #FAAD14 0%, #FFC53D 100%);
+    }
+
+    &.tier-3 {
+      background: linear-gradient(90deg, #FA8C16 0%, #FFA940 100%);
+    }
+
+    &.tier-4 {
+      background: linear-gradient(90deg, #F5222D 0%, #FF4D4F 100%);
+    }
+
+    &.tier-5 {
+      background: linear-gradient(90deg, #722ED1 0%, #9254DE 100%);
+    }
+  }
+}
+
+.legend {
+  margin-top: $spacing-md;
+  padding-top: $spacing-sm;
+  border-top: 1rpx solid $color-divider;
+
+  .legendItem {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  .legendText {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
